@@ -1,0 +1,6 @@
+version: '2'
+services:
+    trainer:
+        build: .
+        volumes:
+            - .:/app
