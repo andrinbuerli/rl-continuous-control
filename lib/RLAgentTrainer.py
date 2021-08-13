@@ -3,6 +3,7 @@ import numpy as np
 
 from lib.BaseRLAgent import BaseRLAgent
 from lib.env.ParallelAgentsBaseEnvironment import ParallelAgentsBaseEnvironment
+from lib.log.BaseLogger import BaseLogger
 
 
 class RLAgentTrainer:
@@ -11,10 +12,10 @@ class RLAgentTrainer:
             self,
             agent: BaseRLAgent,
             env: ParallelAgentsBaseEnvironment,
-            log_wandb: bool = False):
+            logger: BaseLogger = None):
+        self.logger = logger
         self.env = env
         self.agent = agent
-        self.log_wandb = log_wandb
         self.scores = []  # list containing scores from each episode
         self.scores_window = deque(maxlen=100)  # last 100 scores
 
@@ -71,8 +72,8 @@ class RLAgentTrainer:
         self.scores_window.append(scores.mean())  # save most recent score
         self.scores.append(scores.mean())  # save most recent score
 
-        if self.log_wandb:
-            wandb.log({
+        if self.logger is not None:
+            self.logger.log({
                 "score": self.scores,
                 "avg. score": self.scores_window
             })
