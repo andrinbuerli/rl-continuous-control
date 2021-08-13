@@ -3,6 +3,7 @@ import numpy as np
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
 from lib.policy.DiscretePolicy import DiscretePolicy
 from lib.ppo.PPORLAgent import PPORLAgent
+from test.ppo.MockPolicy import MockPolicy
 
 
 def test_clipped_surrogate_function():
@@ -26,6 +27,43 @@ def test_clipped_surrogate_function():
 
     # assert
     assert loss != 0 and not np.isnan(loss.detach().cpu().numpy())
+
+
+def test_clipped_surrogate_calculation():
+    # arrange
+    policy = MockPolicy(
+        state_size=1, action_size=1, seed=42,
+        return_forward_values=(
+            torch.Tensor([[1], [1], [1]]), torch.log(torch.Tensor([0.89, 0.25, 0.3]))
+        ))
+
+    testee = PPORLAgent(
+        beta=0,
+        policy=policy
+    )
+
+    old_probs = np.array([[0.1, 0.2, 0.4]])
+    states = np.array([[[10], [11], [5]]])
+    rewards = np.array([[0, 1, 2]])
+
+    discounted_rewards = rewards * np.array([testee.discount_rate**0, testee.discount_rate**1, testee.discount_rate**2])
+    rewards_future = discounted_rewards.reshape(-1)[::-1].cumsum()[::-1].reshape(1, -1)
+    _, log_new_probs = policy(torch.tensor(states, dtype=torch.float32).to("cpu").reshape(3, 1))
+    new_probs = torch.exp(log_new_probs.view(1, -1)).detach().numpy()
+    policy.seed = torch.manual_seed(42)
+
+    # act
+    loss = testee._clipped_surrogate_function(
+        old_probs=old_probs, states=states, rewards=rewards
+    ).detach().numpy()
+
+    # assert
+    predicted_loss = np.array([min(
+        new_probs[0][i]/old_probs[0][i]*rewards_future[0][i],
+        np.clip(new_probs[0][i] / old_probs[0][i], 1-testee.epsilon, 1+testee.epsilon) * rewards_future[0][i]
+    )for i in range(3)]).mean()
+
+    assert np.isclose(predicted_loss, loss, atol=1e-8)
 
 
 def test_clipped_surrogate_function_backprop():
@@ -68,7 +106,7 @@ def test_act_continuous():
     states = np.random.uniform(0, 1, (batch_size, timesteps, policy.state_size))
 
     # act
-    actions = testee.act(states)
+    actions, _ = testee.act(states)
 
     # assert
     assert actions.shape == (batch_size, timesteps, policy.action_size) and actions.dtype == np.float32
@@ -88,7 +126,7 @@ def test_act_discrete():
     states = np.random.uniform(0, 1, (batch_size, timesteps, policy.state_size))
 
     # act
-    actions = testee.act(states)
+    actions, _ = testee.act(states)
 
     # assert
     assert actions.shape == (batch_size, timesteps) and actions.dtype == np.int
