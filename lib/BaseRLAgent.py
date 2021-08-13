@@ -20,7 +20,13 @@ class BaseRLAgent:
         return torch.optim.Adam(params, lr=self.learning_rate)
 
     @abc.abstractmethod
-    def act(self, states: np.ndarray) -> np.ndarray:
+    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
+        """
+        Determine next actions for each state
+
+        @param states: array of states
+        @return: actions, probabilities of actions
+        """
         pass
 
     @abc.abstractmethod
