@@ -1,3 +1,5 @@
+from unityagents import UnityEnvironment
+
 from lib.BaseRLAgent import BaseRLAgent
 
 
