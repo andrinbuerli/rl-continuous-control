@@ -37,10 +37,10 @@ class PPORLAgent(BaseRLAgent):
 
         self.policy_optimizer = self._get_optimizer(self.policy.parameters())
 
-    def act(self, states: np.ndarray) -> np.ndarray:
+    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         actions, log_probs = self.policy(states)
-        return actions.detach().numpy()
+        return actions.detach().numpy(), torch.exp(log_probs).detach().numpy()
 
     def learn(
             self,
@@ -85,22 +85,27 @@ class PPORLAgent(BaseRLAgent):
         rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
         old_probs = torch.tensor(old_probs, dtype=torch.float32).to(self.device)
 
-        actions, log_probs = self.policy(states)
+        shape = states.shape
+        _, log_probs = self.policy(states.reshape(-1, shape[-1]))
+        log_probs = log_probs.view(shape[0], shape[1])
         new_probs = torch.exp(log_probs)
 
-        indices = torch.linspace(rewards.shape[0] - 1, 0, rewards.shape[0]).to(torch.float32).to(self.device)
-        reversed_indices = torch.linspace(rewards.shape[0] - 1, 0, rewards.shape[0]).to(torch.long).to(self.device)
+        indices = torch.linspace(0, rewards.shape[1] - 1,  rewards.shape[1]).to(torch.float32).to(self.device)
+        reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
 
-        discounts = (self.discount_rate ** indices).view(-1, 1)
+        discounts = (self.discount_rate ** indices).view(1, -1)
 
         discounted_rewards = discounts * rewards
 
-        future_rewards = discounted_rewards[reversed_indices].cumsum(dim=0)[reversed_indices].to(torch.float)
+        future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
 
-        mean = future_rewards.mean(dim=1).view(-1, 1)
-        std = (future_rewards.std(dim=1) + 1.e-10).view(-1, 1)
+        if rewards.shape[0] > 1:
+            mean = future_rewards.mean(dim=0).view(1, -1)
+            std = (future_rewards.std(dim=0) + 1.e-10).view(1, -1)
 
-        rewards_normalized = (future_rewards - mean) / std
+            rewards_normalized = (future_rewards - mean) / std
+        else:
+            rewards_normalized = future_rewards
 
         ratio = new_probs / old_probs
         clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
