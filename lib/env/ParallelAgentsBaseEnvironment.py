@@ -33,3 +33,10 @@ class ParallelAgentsBaseEnvironment:
         @return: next_states, rewards, dones (binary)
         """
         pass
+
+    @abc.abstractmethod
+    def dispose(self):
+        """
+        Dispose environment
+        """
+        pass

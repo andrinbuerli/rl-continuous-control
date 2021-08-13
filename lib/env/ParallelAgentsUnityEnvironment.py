@@ -44,3 +44,6 @@ class ParallelAgentsUnityEnvironment(ParallelAgentsBaseEnvironment):
         dones = env_info.local_done  # see if episode has finished
 
         return next_states, rewards, dones
+
+    def dispose(self):
+        self.env.close()
