@@ -1,36 +1,17 @@
-from unityagents import UnityEnvironment
+import torch
 
 from lib.RLAgentTrainer import RLAgentTrainer
+from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
 from lib.ppo.PPORLAgent import PPORLAgent
 
-
 if __name__ == "__main__":
-    env = UnityEnvironment(file_name='Reacher_Linux_NoVis/Reacher.x86_64')
-    brain_name = env.brain_names[0]
-    brain = env.brains[brain_name]
+    env = ParallelAgentsUnityEnvironment(env_binary_path='Reacher_Linux_NoVis/Reacher.x86_64')
 
-    # reset the environment
-    env_info = env.reset(train_mode=True)[brain_name]
+    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+                                              output_transform=lambda x: torch.tanh(x))
+    agent = PPORLAgent(policy=policy, learning_rate=1e-4)
 
-    # number of agents
-    num_agents = len(env_info.agents)
-    print('Number of agents:', num_agents)
-
-    # size of each action
-    action_size = brain.vector_action_space_size
-    print('Size of each action:', action_size)
-
-    # examine the state space
-    states = env_info.vector_observations
-    state_size = states.shape[1]
-    print('There are {} agents. Each observes a state with length: {}'.format(states.shape[0], state_size))
-
-    trainer = RLAgentTrainer()
-
-    policy = ContinuousDiagonalGaussianPolicy(state_size=state_size, action_size=action_size, seed=42,
-                                              action_clip_range=[-1, 1])
-    agent = PPORLAgent(policy=policy)
-
-    trainer.train(10, agent=agent, env=env, max_t=100, log_wandb=False)
+    trainer = RLAgentTrainer(agent=agent, env=env, log_wandb=False)
+    trainer.train(n_iterations=1000, max_t=100)
 

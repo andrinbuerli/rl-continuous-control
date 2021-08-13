@@ -1,4 +1,5 @@
 import abc
+from typing import Callable
 import torch
 import torch.nn as nn
 
@@ -12,7 +13,7 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
             state_size: int,
             action_size: int,
             seed: int,
-            action_clip_range: (float, float) = None):
+            output_transform: Callable[[torch.Tensor], torch.Tensor] = None):
         """
         Policy which learns to sample an action from a continuous multivariate gaussian distribution where each
         action dimension is considered to be independent.
@@ -20,10 +21,10 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
         @param state_size: Dimension of each state
         @param action_size: Dimension of each action
         @param seed: Random seed
-        @param action_clip_range: range to clip continuous action into
+        @param output_transform: optional, generic transformation to be applied to policy output
         """
         super().__init__(state_size=state_size, action_size=action_size, seed=seed)
-        self.action_clip_range = action_clip_range
+        self.output_transform = output_transform
 
         self.feature_extractor = nn.Sequential(
             nn.Linear(state_size, 128),
@@ -43,8 +44,8 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
 
         dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=torch.diag_embed(diag_sigma))
         raw_actions = dist.sample()
-        if self.action_clip_range is not None:
-            actions = torch.clip(raw_actions, self.action_clip_range[0], self.action_clip_range[1])
+        if self.output_transform is not None:
+            actions = self.output_transform(raw_actions)
         else:
             actions = raw_actions
 
