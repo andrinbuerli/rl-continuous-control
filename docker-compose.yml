@@ -1,6 +1,6 @@
 version: '2'
 services:
-    trainer:
+    train_reacher:
         build: .
         volumes:
             - .:/app
