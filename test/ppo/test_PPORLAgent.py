@@ -22,7 +22,7 @@ def test_clipped_surrogate_function():
 
     # act
     loss = testee._clipped_surrogate_function(
-        old_probs=old_probs, states=states, rewards=rewards
+        old_log_probs=old_probs, states=states, rewards=rewards
     )
 
     # assert
@@ -49,13 +49,13 @@ def test_clipped_surrogate_calculation():
     discounted_rewards = rewards * np.array([testee.discount_rate**0, testee.discount_rate**1, testee.discount_rate**2])
     rewards_future = discounted_rewards.reshape(-1)[::-1].cumsum()[::-1].reshape(1, -1)
     _, log_new_probs = policy(torch.tensor(states, dtype=torch.float32).to("cpu").reshape(3, 1))
-    new_probs = torch.exp(log_new_probs.view(1, -1)).detach().numpy()
+    new_probs = torch.exp(log_new_probs.view(1, -1)).detach().cpu().numpy()
     policy.seed = torch.manual_seed(42)
 
     # act
     loss = testee._clipped_surrogate_function(
-        old_probs=old_probs, states=states, rewards=rewards
-    ).detach().numpy()
+        old_log_probs=old_probs, states=states, rewards=rewards
+    ).detach().cpu().numpy()
 
     # assert
     predicted_loss = np.array([min(
@@ -83,13 +83,13 @@ def test_clipped_surrogate_function_backprop():
 
     # act
     loss = testee._clipped_surrogate_function(
-        old_probs=old_probs, states=states, rewards=rewards
+        old_log_probs=old_probs, states=states, rewards=rewards
     )
 
     loss.backward()
 
     # assert
-    assert all([(x.grad != 0).detach().numpy().any() for x in policy.parameters()])
+    assert all([(x.grad != 0).detach().cpu().numpy().any() for x in policy.parameters()])
 
 
 def test_act_continuous():
@@ -151,14 +151,14 @@ def test_learn():
     rewards = np.random.uniform(0, 1, (batch_size, timesteps))
     dones = np.zeros((batch_size, timesteps))
 
-    previous_policy_params = [x.detach().numpy().copy() for x in policy.parameters()]
+    previous_policy_params = [x.detach().cpu().numpy().copy() for x in policy.parameters()]
 
     # act
-    testee.learn(states=states, actions=actions, action_probs=probs, rewards=rewards,
+    testee.learn(states=states, actions=actions, action_log_probs=probs, rewards=rewards,
                  next_states=next_states, dones=dones)
 
     # assert
-    post_policy_params = [x.detach().numpy() for x in policy.parameters()]
+    post_policy_params = [x.detach().cpu().numpy() for x in policy.parameters()]
     assert all([(x != y).any() for x, y in zip(previous_policy_params, post_policy_params)])
 
 
@@ -181,12 +181,12 @@ def test_learn_discrete():
     rewards = np.random.uniform(0, 1, (batch_size, timesteps))
     dones = np.zeros((batch_size, timesteps))
 
-    previous_policy_params = [x.detach().numpy().copy() for x in policy.parameters()]
+    previous_policy_params = [x.detach().cpu().numpy().copy() for x in policy.parameters()]
 
     # act
-    testee.learn(states=states, actions=actions, action_probs=probs, rewards=rewards,
+    testee.learn(states=states, actions=actions, action_log_probs=probs, rewards=rewards,
                  next_states=next_states, dones=dones)
 
     # assert
-    post_policy_params = [x.detach().numpy() for x in policy.parameters()]
+    post_policy_params = [x.detach().cpu().numpy() for x in policy.parameters()]
     assert all([(x != y).any() for x, y in zip(previous_policy_params, post_policy_params)])

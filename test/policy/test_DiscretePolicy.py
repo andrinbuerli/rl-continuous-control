@@ -9,9 +9,9 @@ def test_forward_shape():
 
     states = np.random.uniform(0, 1, (10, 10))
 
-    actions, log_probs = testee.forward(torch.tensor(states))
+    actions, action_logits, dist = testee.forward(torch.tensor(states))
 
-    assert list(actions.shape) == [10] and list(log_probs.shape) == [10]
+    assert list(actions.shape) == [10] and list(action_logits.shape) == [10]
 
 
 def test_forward_dtype():
@@ -19,6 +19,6 @@ def test_forward_dtype():
 
     states = np.random.uniform(0, 1, (10, 10))
 
-    actions, log_probs = testee.forward(torch.tensor(states))
+    actions, action_logits, dist = testee.forward(torch.tensor(states))
 
     assert actions.dtype == torch.int64
