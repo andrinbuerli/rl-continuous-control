@@ -33,8 +33,8 @@ class BaseRLAgent:
     def learn(
             self,
             states: np.ndarray,
-            actions: np.ndarray,
-            action_probs: np.ndarray,
+            action_logits: np.ndarray,
+            action_log_probs: np.ndarray,
             rewards: np.ndarray,
             next_states: np.ndarray,
             dones: np.ndarray):

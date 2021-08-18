@@ -28,7 +28,7 @@ class PPORLAgent(BaseRLAgent):
     ):
         self.beta_deay = beta_deay
         self.epsilon_decay = epsilon_decay
-        self.policy = policy
+        self.policy = policy.to(device)
         self.SGD_epoch = SGD_epoch
         self.beta = beta
         self.epsilon = epsilon
@@ -39,20 +39,21 @@ class PPORLAgent(BaseRLAgent):
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
-        actions, log_probs = self.policy(states)
-        return actions.detach().numpy(), torch.exp(log_probs).detach().numpy()
+        actions, action_logits, dist = self.policy(states)
+        return actions.detach().cpu().numpy(), action_logits.detach().cpu().numpy(), dist.log_prob(action_logits).detach().cpu().numpy()
 
     def learn(
             self,
             states: np.ndarray,
-            actions: np.ndarray,
-            action_probs: np.ndarray,
+            action_logits: np.ndarray,
+            action_log_probs: np.ndarray,
             rewards: np.ndarray,
             next_states: np.ndarray,
             dones: np.ndarray):
 
         for _ in range(self.SGD_epoch):
-            loss = -self._clipped_surrogate_function(action_probs, states, rewards)
+            loss = -self._clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
+                                                     action_logits=action_logits, rewards=rewards)
             self.policy_optimizer.zero_grad()
             loss.backward()
             self.policy_optimizer.step()
@@ -69,26 +70,28 @@ class PPORLAgent(BaseRLAgent):
 
     def _clipped_surrogate_function(
             self,
-            old_probs: np.ndarray,
+            action_logits: np.ndarray,
+            old_log_probs: np.ndarray,
             states: np.ndarray,
             rewards: np.ndarray):
         """
         Calculate the clipped surrogate loss function
 
-        :param old_probs: probabilities of original trajectories [trajectories x time_steps]
+        :param old_log_probs: probabilities of original trajectories [trajectories x time_steps]
         :param states: states of original trajectories [trajectories x states]
         :param rewards: rewards of original trajectories [trajectories x rewards]
-        :return:
+        :return: differentiable loss
         """
 
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
+        action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
         rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
-        old_probs = torch.tensor(old_probs, dtype=torch.float32).to(self.device)
+        old_log_probs = torch.tensor(old_log_probs, dtype=torch.float32).to(self.device)
 
         shape = states.shape
-        _, log_probs = self.policy(states.reshape(-1, shape[-1]))
-        log_probs = log_probs.view(shape[0], shape[1])
-        new_probs = torch.exp(log_probs)
+        dist = self.policy.get_action_distribution(states.reshape(-1, shape[-1]))
+        new_log_probs, entropy = dist.log_prob(action_logits.reshape(-1, action_logits.shape[-1])), dist.entropy()
+        new_log_probs, entropy = new_log_probs.view(shape[0], shape[1]), entropy.view(shape[0], shape[1])
 
         indices = torch.linspace(0, rewards.shape[1] - 1,  rewards.shape[1]).to(torch.float32).to(self.device)
         reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
@@ -107,16 +110,13 @@ class PPORLAgent(BaseRLAgent):
         else:
             rewards_normalized = future_rewards
 
-        ratio = new_probs / old_probs
+        ratio = torch.exp(new_log_probs - old_log_probs)
         clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
         clipped_surrogate = torch.min(ratio * rewards_normalized, clipped_ratio * rewards_normalized)
 
         # include a regularization term
-        # this steers new_policy towards 0.5
-        # which prevents policy to become exactly 0 or 1
+        # this steers new_policy towards a high entropy state
         # this helps with exploration
-        # add in 1.e-10 to avoid log(0) which gives nan
-        entropy = -(new_probs * torch.log(old_probs + 1.e-10) +
-                    (1.0 - new_probs) * torch.log(1.0 - old_probs + 1.e-10))
+        regularization = self.beta * entropy
 
-        return (clipped_surrogate + self.beta * entropy).mean()
+        return (clipped_surrogate + regularization).mean()
