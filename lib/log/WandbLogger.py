@@ -9,7 +9,6 @@ class WandbLogger(BaseLogger):
     def __init__(
             self,
             wandb_project_name: str,
-            entity: str,
             api_key: str,
             config: dict):
         super().__init__(config=config)
@@ -17,14 +16,25 @@ class WandbLogger(BaseLogger):
         os.environ["WANDB_API_KEY"] = api_key
         wandb.login()
 
+        self.run: wandb = wandb.init(project=wandb_project_name)
         wandb.config.update(self.config)
-        self.run: wandb = wandb.init(project=wandb_project_name, entity=entity)
 
     def log(self, data: dict):
-        wandb.log({
-            "score": self.scores,
-            "avg. score": self.scores_window
-        })
+        wandb.log(data)
 
     def dispose(self):
         self.run.finish()
+
+
+class WandbSweepLogger(BaseLogger):
+
+    def __init__(
+            self,
+            config: dict):
+        super().__init__(config=config)
+
+    def log(self, data: dict):
+        wandb.log(data)
+
+    def dispose(self):
+        pass
