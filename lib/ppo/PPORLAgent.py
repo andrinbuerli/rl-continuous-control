@@ -1,8 +1,5 @@
 import numpy as np
-import abc
 import torch
-import torch.nn as nn
-import os
 
 from lib.BaseRLAgent import BaseRLAgent
 from lib.policy import BasePolicy
@@ -51,9 +48,16 @@ class PPORLAgent(BaseRLAgent):
             next_states: np.ndarray,
             dones: np.ndarray):
 
+        states = torch.tensor(states, dtype=torch.float32).to(self.device)
+        action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
+        rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
+        action_log_probs = torch.tensor(action_log_probs, dtype=torch.float32).to(self.device)
+
+        rewards = self.get_discounted_future_rewards(rewards)
+
         for _ in range(self.SGD_epoch):
-            loss = -self._clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
-                                                     action_logits=action_logits, rewards=rewards)
+            loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
+                                                    action_logits=action_logits, future_discounted_rewards=rewards)
             self.policy_optimizer.zero_grad()
             loss.backward()
             self.policy_optimizer.step()
@@ -68,47 +72,33 @@ class PPORLAgent(BaseRLAgent):
     def get_name(self) -> str:
         return "PPO"
 
-    def _clipped_surrogate_function(
+    def clipped_surrogate_function(
             self,
             action_logits: np.ndarray,
             old_log_probs: np.ndarray,
             states: np.ndarray,
-            rewards: np.ndarray):
+            future_discounted_rewards: np.ndarray):
         """
         Calculate the clipped surrogate loss function
 
         :param old_log_probs: probabilities of original trajectories [trajectories x time_steps]
         :param states: states of original trajectories [trajectories x states]
-        :param rewards: rewards of original trajectories [trajectories x rewards]
+        :param future_discounted_rewards: rewards of original trajectories [trajectories x rewards]
         :return: differentiable loss
         """
-
-        states = torch.tensor(states, dtype=torch.float32).to(self.device)
-        action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
-        rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
-        old_log_probs = torch.tensor(old_log_probs, dtype=torch.float32).to(self.device)
 
         shape = states.shape
         dist = self.policy.get_action_distribution(states.reshape(-1, shape[-1]))
         new_log_probs, entropy = dist.log_prob(action_logits.reshape(-1, action_logits.shape[-1])), dist.entropy()
         new_log_probs, entropy = new_log_probs.view(shape[0], shape[1]), entropy.view(shape[0], shape[1])
 
-        indices = torch.linspace(0, rewards.shape[1] - 1,  rewards.shape[1]).to(torch.float32).to(self.device)
-        reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
+        if future_discounted_rewards.shape[0] > 1:
+            mean = future_discounted_rewards.mean(dim=0).view(1, -1)
+            std = (future_discounted_rewards.std(dim=0) + 1.e-10).view(1, -1)
 
-        discounts = (self.discount_rate ** indices).view(1, -1)
-
-        discounted_rewards = discounts * rewards
-
-        future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
-
-        if rewards.shape[0] > 1:
-            mean = future_rewards.mean(dim=0).view(1, -1)
-            std = (future_rewards.std(dim=0) + 1.e-10).view(1, -1)
-
-            rewards_normalized = (future_rewards - mean) / std
+            rewards_normalized = (future_discounted_rewards - mean) / std
         else:
-            rewards_normalized = future_rewards
+            rewards_normalized = future_discounted_rewards
 
         ratio = torch.exp(new_log_probs - old_log_probs)
         clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
@@ -120,3 +110,11 @@ class PPORLAgent(BaseRLAgent):
         regularization = self.beta * entropy
 
         return (clipped_surrogate + regularization).mean()
+
+    def get_discounted_future_rewards(self, rewards):
+        indices = torch.linspace(0, rewards.shape[1] - 1, rewards.shape[1]).to(torch.float32).to(self.device)
+        reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
+        discounts = (self.discount_rate ** indices).view(1, -1)
+        discounted_rewards = discounts * rewards
+        future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
+        return future_rewards
