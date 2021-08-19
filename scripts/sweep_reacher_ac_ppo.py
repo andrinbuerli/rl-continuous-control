@@ -27,7 +27,8 @@ if __name__ == "__main__":
               "SGD_epoch": 1,
               "n_iterations": 1,
               "max_t": 1,
-              "gae_lambda": 0.1
+              "gae_lambda": 0.1,
+              "seed": int(np.random.randint(0, 1e10, 1)[0])
             })
 
     # Pass them to wandb.init
@@ -37,9 +38,9 @@ if __name__ == "__main__":
 
     env = ParallelAgentsUnityEnvironment(target_reward=35,
                                          env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                                           output_transform=lambda x: torch.tanh(x))
-    value_function = ValueFunction(state_size=env.state_size, seed=42)
+    value_function = ValueFunction(state_size=env.state_size, seed=args.seed)
     agent = PPO_ActorCriticRLAgent(
         actor=policy,
         critic=value_function,

@@ -18,12 +18,13 @@ if __name__ == "__main__":
                 "max_t": 100,
                 "enable_log": 0,
                 "discount_rate": 0.99,
-                "api_key": ""
+                "api_key": "",
+                "seed": int(np.random.randint(0, 1e10, 1)[0])
             })
 
     env = ParallelAgentsUnityEnvironment(target_reward=35,
                                          env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                               output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(policy=policy, beta=0)
 

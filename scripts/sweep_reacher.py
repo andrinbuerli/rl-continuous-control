@@ -24,7 +24,8 @@ if __name__ == "__main__":
               "learning_rate": 0.1,
               "SGD_epoch": 1,
               "n_iterations": 1,
-              "max_t": 1
+              "max_t": 1,
+              "seed": int(np.random.randint(0, 1e10, 1)[0])
             })
 
     # Pass them to wandb.init
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 
     env = ParallelAgentsUnityEnvironment(target_reward=35,
                                          env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                               output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(
         policy=policy,
