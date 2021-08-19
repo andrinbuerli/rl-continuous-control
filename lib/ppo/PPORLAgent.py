@@ -6,10 +6,6 @@ from lib.policy import BasePolicy
 
 
 class PPORLAgent(BaseRLAgent):
-    """
-    Proximal policy approximation agent
-    TBD: link paper
-    """
 
     def __init__(
             self,
@@ -18,12 +14,28 @@ class PPORLAgent(BaseRLAgent):
             epsilon: float = 0.1,
             epsilon_decay: float = .999,
             beta: float = .01,
-            beta_deay: float = .995,
+            beta_decay: float = .995,
             learning_rate: float = 1e-3,
             SGD_epoch: int = 4,
             device = "cpu",
     ):
-        self.beta_deay = beta_deay
+        """
+        Plain proximal policy approximation agent
+        https://arxiv.org/abs/1707.06347 (without ActorCritic)
+
+        @param actor: The actor network (policy)
+        @param critic: The critic network (Value function approximation)
+        @param discount_rate: Discounting factor for future rewards (γ)
+        @param epsilon: Clipping parameter for the ppo algorithm (ε)
+        @param epsilon_decay: Decay factor for epsilon parameter
+        @param beta: Coefficient for the entropy term in loss function (β)
+                     Encourages the exploration of the action space
+        @param beta_decay: Decay factor for the beta parameter
+        @param learning_rate: Learning rate for the Adam optimizer (α)
+        @param SGD_epoch: Number of repeated optimization steps in the ppo algorithm (K)
+        @param device: the device on which the calculations are to be executed
+        """
+        self.beta_deay = beta_decay
         self.epsilon_decay = epsilon_decay
         self.policy = policy.to(device)
         self.SGD_epoch = SGD_epoch
@@ -45,8 +57,7 @@ class PPORLAgent(BaseRLAgent):
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray,
-            dones: np.ndarray):
+            next_states: np.ndarray):
 
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
@@ -81,10 +92,11 @@ class PPORLAgent(BaseRLAgent):
         """
         Calculate the clipped surrogate loss function
 
-        :param old_log_probs: probabilities of original trajectories [trajectories x time_steps]
-        :param states: states of original trajectories [trajectories x states]
-        :param future_discounted_rewards: rewards of original trajectories [trajectories x rewards]
-        :return: differentiable loss
+        @param action_logits: logit values of the trajectory actions [trajectories, time steps, action_size]
+        @param old_log_probs: log probabilities of original trajectories [trajectories, time steps]
+        @param states: states of original trajectories [trajectories, time steps, state_size]
+        @param future_discounted_rewards: rewards of original trajectories [trajectories, time steps]
+        @return: differentiable clipped surrogate loss scalar
         """
 
         shape = states.shape
@@ -112,6 +124,12 @@ class PPORLAgent(BaseRLAgent):
         return (clipped_surrogate + regularization).mean()
 
     def get_discounted_future_rewards(self, rewards):
+        """
+        Calculate the discounted future rewards for each time step in each trajectory
+
+        @param rewards: the raw received rewards [trajectories, time steps]
+        @return: the discounted future rewards [trajectories, time steps]
+        """
         indices = torch.linspace(0, rewards.shape[1] - 1, rewards.shape[1]).to(torch.float32).to(self.device)
         reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
         discounts = (self.discount_rate ** indices).view(1, -1)

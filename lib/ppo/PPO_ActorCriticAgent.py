@@ -10,48 +10,57 @@ from lib.function.ValueFunction import ValueFunction
 
 
 class PPO_ActorCriticRLAgent(PPORLAgent):
-    """
-    Proximal policy approximation agent, actor-critic style
-    TBD: link paper
-    """
 
     def __init__(
             self,
-            get_actor: Callable[[], BasePolicy],
-            get_critic: Callable[[], ValueFunction],
+            actor: BasePolicy,
+            critic: ValueFunction,
             discount_rate: float = .99,
             epsilon: float = 0.1,
             epsilon_decay: float = .999,
             beta: float = .01,
-            beta_deay: float = .995,
+            beta_decay: float = .995,
             learning_rate: float = 1e-3,
             SGD_epoch: int = 4,
             gae_lambda: float = 0.95,
-            tau_soft_update: float = 1e-3,
             device="cpu",
     ):
+        """
+        Proximal policy approximation agent, actor-critic style
+        https://arxiv.org/abs/1707.06347
+
+        @param actor: The actor network (policy)
+        @param critic: The critic network (Value function approximation)
+        @param discount_rate: Discounting factor for future rewards (γ)
+        @param epsilon: Clipping parameter for the ppo algorithm (ε)
+        @param epsilon_decay: Decay factor for epsilon parameter
+        @param beta: Coefficient for the entropy term in loss function (β)
+                     Encourages the exploration of the action space
+        @param beta_decay: Decay factor for the beta parameter
+        @param learning_rate: Learning rate for the Adam optimizer (α)
+        @param SGD_epoch: Number of repeated optimization steps in the ppo algorithm (K)
+        @param gae_lambda: Generalized advantage estimation weighting parameter (λ)
+                           λ = 0 recovers temporal difference and λ=1 the monte carlo estimate
+        @param device: the device on which the calculations are to be executed
+        """
         super(PPO_ActorCriticRLAgent, self).__init__(
-            policy=get_actor(),
+            policy=actor,
             discount_rate=discount_rate,
             epsilon=epsilon,
             epsilon_decay=epsilon_decay,
             beta=beta,
-            beta_deay=beta_deay,
+            beta_decay=beta_decay,
             learning_rate=learning_rate,
             SGD_epoch=SGD_epoch,
             device=device)
 
-        self.tau_soft_update = tau_soft_update
         self.gae_lambda = gae_lambda
-        self.actor_local = self.policy
-        self.critic_local = get_critic().to(device)
-
-        # self.actor_target = get_actor().to(device)
-        # self.critic_target = get_critic().to(device)
+        self.actor = self.policy
+        self.critic = critic.to(device)
 
         self.actor_optimizer = self.policy_optimizer
-        self.critic_optimizer = self._get_optimizer(self.critic_local.parameters())
-        self.models = [self.actor_local, self.critic_local] #, self.actor_target, self.critic_target]
+        self.critic_optimizer = self._get_optimizer(self.critic.parameters())
+        self.models = [self.actor, self.critic]
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         return super(PPO_ActorCriticRLAgent, self).act(states)
@@ -62,8 +71,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray,
-            dones: np.ndarray):
+            next_states: np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         next_states = torch.tensor(next_states, dtype=torch.float32).to(self.device)
         action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
@@ -74,8 +82,8 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
         for _ in range(self.SGD_epoch):
             shape = states.shape
-            estimated_state_values = self.critic_local(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
-            estimated_next_state_values = self.critic_local(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
+            estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
+            estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             value_last_next_state = estimated_next_state_values[:, -1]
             critic_loss = (((future_discounted_rewards + value_last_next_state.view(-1, 1)) - estimated_state_values) ** 2).mean()
 
@@ -103,6 +111,14 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
         self.beta *= self.beta_deay
 
     def estimate_advantages(self, estimated_state_values, estimated_next_state_values, rewards):
+        """
+        Estimate advantages for each (state, next_state, reward) tuple
+
+        @param estimated_state_values: estimated values for state at time step t [trajectories, time steps]
+        @param estimated_next_state_values: estimated values for state at time step t+1 [trajectories, time steps]
+        @param rewards: received reward at time step t [trajectories, time steps]
+        @return: generalized advantage estimation [trajectories, time steps]
+        """
         temporal_differences = rewards \
                                + self.discount_rate * estimated_next_state_values \
                                - estimated_state_values
@@ -117,18 +133,3 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
     def get_name(self) -> str:
         return "PPO_ActorCritic"
-
-
-    #def soft_update(self, local_model, target_model):
-    #    """
-    #    Soft update model parameters.
-    #    θ_target = τ*θ_local + (1 - τ)*θ_target
-    #
-    #    @param local_model: weights will be copied from
-    #    @param target_model: weights will be copied to
-    #    @return:
-    #    """
-    #
-    #    for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
-    #        target_param.data.copy_(self.tau_soft_update * local_param.data
-    #                                + (1.0 - self.tau_soft_update) * target_param.data)

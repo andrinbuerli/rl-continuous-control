@@ -12,6 +12,14 @@ class BaseRLAgent:
             models: [nn.Module],
             device: str,
             learning_rate: float):
+        """
+        Initialize the BaseRLAgent
+
+        @param models: a list of the models used by the agent
+        @param device: the device on which the calculations are to be executed
+        @param learning_rate: the learning rate which is used for all optimizers
+        """
+
         self.learning_rate = learning_rate
         self.models = models
         self.device = device
@@ -20,12 +28,12 @@ class BaseRLAgent:
         return torch.optim.Adam(params, lr=self.learning_rate)
 
     @abc.abstractmethod
-    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
+    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.array):
         """
         Determine next actions for each state
 
         @param states: array of states
-        @return: actions, probabilities of actions
+        @return: (actions, action logits, log probability of action logits)
         """
         pass
 
@@ -36,8 +44,17 @@ class BaseRLAgent:
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray,
-            dones: np.ndarray):
+            next_states: np.ndarray):
+        """
+        Learn from sampled trajectories.
+
+        @param states: The state at time step t
+        @param action_logits: The sampled logit value of the chosen action at time step t
+        @param action_log_probs: The log probability of the chosen action at time step t
+        @param rewards: The reward received from the environment at time step t+1
+        @param next_states: The state at time step t+1
+        @return:
+        """
         pass
 
     @abc.abstractmethod

@@ -12,13 +12,8 @@ class DiscretePolicy(BasePolicy):
                  action_size: int,
                  seed: int,
                  output_transform: Callable[[torch.Tensor], torch.Tensor] = None):
-        """Initialize parameters and build model.
-
-        Params
-        ======
-            state_size (int): Dimension of each state
-            action_size (int): Dimension of each action
-            seed (int): Random seed
+        """
+        Stochastic policy which learns to sample a single action from a categorical distribution.
         """
         super().__init__(state_size=state_size, action_size=action_size, seed=seed, output_transform=output_transform)
 

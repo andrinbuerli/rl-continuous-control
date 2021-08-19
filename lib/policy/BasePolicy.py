@@ -12,6 +12,14 @@ class BasePolicy(nn.Module):
             action_size: int,
             seed: int,
             output_transform: Callable[[torch.Tensor], torch.Tensor] = None):
+        """
+        Initialize the policy
+
+        @param state_size: Dimension of each state
+        @param action_size: Dimension of each action
+        @param seed: Random seed
+        @param output_transform: optional, generic transformation to be applied to policy output
+        """
         super().__init__()
         self.output_transform = output_transform
         self.action_size = action_size

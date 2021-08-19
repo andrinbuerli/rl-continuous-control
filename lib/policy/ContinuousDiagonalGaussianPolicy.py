@@ -13,13 +13,8 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
             seed: int,
             output_transform: Callable[[torch.Tensor], torch.Tensor] = None):
         """
-        Policy which learns to sample an action from a continuous multivariate gaussian distribution where each
-        action dimension is considered to be independent.
-
-        @param state_size: Dimension of each state
-        @param action_size: Dimension of each action
-        @param seed: Random seed
-        @param output_transform: optional, generic transformation to be applied to policy output
+        Stochastic policy which learns to sample an action from a continuous multivariate gaussian distribution where
+        each action dimension is considered to be independent.
         """
         super().__init__(state_size=state_size, action_size=action_size, seed=seed, output_transform=output_transform)
         self.output_transform = output_transform
