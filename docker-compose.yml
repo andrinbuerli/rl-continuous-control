@@ -11,5 +11,5 @@ services:
         volumes:
             - .:/app
         command: >
-            bash -c "wandb login bda330f5b627e9dc2184d317b1ab465c7a79b991
-            && wandb agent --count 4 mse-deep-learning/p2_continuous-control/rfq0byxn"
+            bash -c "wandb login <API-KEY>
+            && wandb agent --count 4 <RUN-ID>"
