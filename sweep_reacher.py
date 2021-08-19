@@ -1,9 +1,8 @@
 import json
-import argparse
 import wandb
 import torch
 
-from lib.helper import parse_config_for, extract_config_from
+from lib.helper import parse_config_for
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy

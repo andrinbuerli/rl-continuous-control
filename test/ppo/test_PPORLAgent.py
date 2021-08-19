@@ -21,8 +21,8 @@ def test_clipped_surrogate_function():
     rewards = np.random.uniform(0, 1, (batch_size, timesteps))
 
     # act
-    loss = testee._clipped_surrogate_function(
-        old_log_probs=old_probs, states=states, rewards=rewards
+    loss = testee.clipped_surrogate_function(
+        old_log_probs=old_probs, states=states, future_discounted_rewards=rewards
     )
 
     # assert
@@ -53,8 +53,8 @@ def test_clipped_surrogate_calculation():
     policy.seed = torch.manual_seed(42)
 
     # act
-    loss = testee._clipped_surrogate_function(
-        old_log_probs=old_probs, states=states, rewards=rewards
+    loss = testee.clipped_surrogate_function(
+        old_log_probs=old_probs, states=states, future_discounted_rewards=rewards
     ).detach().cpu().numpy()
 
     # assert
@@ -82,8 +82,8 @@ def test_clipped_surrogate_function_backprop():
     rewards = np.random.uniform(0, 1, (batch_size, timesteps))
 
     # act
-    loss = testee._clipped_surrogate_function(
-        old_log_probs=old_probs, states=states, rewards=rewards
+    loss = testee.clipped_surrogate_function(
+        old_log_probs=old_probs, states=states, future_discounted_rewards=rewards
     )
 
     loss.backward()

@@ -1,5 +1,4 @@
 import json
-import argparse
 import torch
 
 from lib.helper import parse_config_for, extract_config_from
