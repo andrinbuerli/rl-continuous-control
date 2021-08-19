@@ -42,7 +42,11 @@ class PPORLAgent(BaseRLAgent):
         self.beta = beta
         self.epsilon = epsilon
         self.discount_rate = discount_rate
-        super(PPORLAgent, self).__init__(models=[self.policy], device=device, learning_rate=learning_rate)
+        super(PPORLAgent, self).__init__(
+            models=[self.policy],
+            device=device,
+            learning_rate=learning_rate,
+            model_names=["policy"])
 
         self.policy_optimizer = self._get_optimizer(self.policy.parameters())
 

@@ -10,16 +10,19 @@ class BaseRLAgent:
     def __init__(
             self,
             models: [nn.Module],
+            model_names: [str],
             device: str,
             learning_rate: float):
         """
         Initialize the BaseRLAgent
 
         @param models: a list of the models used by the agent
+        @param model_names: a list of the model names used by the agent (required for save / load)
         @param device: the device on which the calculations are to be executed
         @param learning_rate: the learning rate which is used for all optimizers
         """
 
+        self.model_names = model_names
         self.learning_rate = learning_rate
         self.models = models
         self.device = device
@@ -65,12 +68,12 @@ class BaseRLAgent:
         if not os.path.exists(directory_name):
             raise FileNotFoundError(f"Directory {directory_name} not found")
 
-        for model in self.models:
-            model.load_state_dict(torch.load(os.path.join(directory_name, model.network_name + ".pth")))
+        for name, model in zip(self.model_names, self.models):
+            model.load_state_dict(torch.load(os.path.join(directory_name, name + ".pth")))
 
     def save(self, directory_name: str):
         if not os.path.exists(directory_name):
             os.mkdir(directory_name)
 
-        for model in self.models:
-            model.save(os.path.join(directory_name, model.network_name + ".pth"))
+        for name, model in zip(self.model_names, self.models):
+            torch.save(model.state_dict(), os.path.join(directory_name, name + ".pth"))

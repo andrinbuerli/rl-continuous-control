@@ -61,6 +61,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
         self.actor_optimizer = self.policy_optimizer
         self.critic_optimizer = self._get_optimizer(self.critic.parameters())
         self.models = [self.actor, self.critic]
+        self.model_names = ["actor", "critic"]
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         return super(PPO_ActorCriticRLAgent, self).act(states)

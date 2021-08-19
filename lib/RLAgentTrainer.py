@@ -57,7 +57,7 @@ class RLAgentTrainer:
         score_window_mean = np.mean(self.scores_window)
         print('\nEnvironment was not solved in {:d} iterations!\tAverage Score: {:.2f}'.format(n_iterations - 99,
                                                                                                score_window_mean))
-        agent.save(directory_name=f'{agent.get_name()}_{n_iterations - 99}-{round(score_window_mean, 2)}')
+        self.agent.save(directory_name=f'{self.agent.get_name()}_{n_iterations - 99}-{round(score_window_mean, 2)}')
 
     def __collect_trajectories(self, max_t: int):
         """
