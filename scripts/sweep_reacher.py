@@ -1,6 +1,8 @@
 import json
 import wandb
 import torch
+import sys
+sys.path.append("../")
 
 from lib.helper import parse_config_for
 from lib.RLAgentTrainer import RLAgentTrainer

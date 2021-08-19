@@ -1,5 +1,7 @@
 import json
 import torch
+import sys
+sys.path.append("../")
 
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer

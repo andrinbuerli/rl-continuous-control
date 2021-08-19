@@ -1,6 +1,8 @@
 import json
 import wandb
 import torch
+import sys
+sys.path.append("../")
 
 from lib.helper import parse_config_for
 from lib.RLAgentTrainer import RLAgentTrainer
@@ -11,7 +13,8 @@ from lib.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
 from lib.log.WandbLogger import WandbSweepLogger
 
 if __name__ == "__main__":
-    print(f"Found {torch._C._cuda_getDeviceCount()} GPUS")
+    print(f"Found {torch._C._cuda_getDeviceCount()} GPU")
+
     args = parse_config_for(
         program_name='Reacher PPO RL agent trainer',
         config_objects={
@@ -50,6 +53,7 @@ if __name__ == "__main__":
         device="cuda:0")
 
     torch.cuda.set_device(0)
+
     print(f"initialized agent with config: \n {json.dumps(dict(config), sort_keys=True, indent=4)}")
 
     logger = WandbSweepLogger(config=config)
