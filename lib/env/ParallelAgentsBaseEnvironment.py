@@ -9,7 +9,9 @@ class ParallelAgentsBaseEnvironment:
             state_size: int,
             action_size: int,
             action_type: str,
-            num_agents: int):
+            num_agents: int,
+            target_reward: int):
+        self.target_reward = target_reward
         self.num_agents = num_agents
         self.action_type = action_type
         self.action_size = action_size

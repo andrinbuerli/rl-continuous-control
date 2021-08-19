@@ -35,7 +35,8 @@ if __name__ == "__main__":
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 
-    env = ParallelAgentsUnityEnvironment(env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
+    env = ParallelAgentsUnityEnvironment(target_reward=35,
+                                         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
     get_policy = lambda: ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
                                                           output_transform=lambda x: torch.tanh(x))
     get_value_function = lambda: ValueFunction(state_size=env.state_size, seed=42)
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         epsilon=args.epsilon,
         epsilon_decay=args.epsilon_decay,
         beta=args.beta,
-        beta_deay=args.beta_deay,
+        beta_decay=args.beta_deay,
         learning_rate=args.learning_rate,
         SGD_epoch=args.SGD_epoch,
         gae_lambda=args.gae_lambda,
