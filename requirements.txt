@@ -3,7 +3,7 @@ wandb==0.9.7
 pytest==6.2.4
 
 
-
+# dependencies of unityagents (except tensorflow)
 grpcio>=1.11.0
 h5py>=2.9.0
 numpy>=1.13.3,<2.0
