@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 
-    env = ParallelAgentsUnityEnvironment(env_binary_path='../Reacher_Linux_NoVis/Reacher.x86_64')
+    env = ParallelAgentsUnityEnvironment(env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
                                               output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(
