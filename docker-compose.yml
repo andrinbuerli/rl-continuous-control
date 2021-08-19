@@ -1,15 +1,27 @@
 version: '2.3'
 services:
-    train_reacher:
+    train_reacher_ppo:
         build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=1
         volumes:
             - .:/app
-        command: python main.py
-    sweep_reacher:
+        command: >
+            bash -c "cd scripts && python train_reacher.py --api_key <API-KEY>"
+    train_reacher_ppo_ac:
         build: .
-        runtime: nvidia
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=1
+        volumes:
+            - .:/app
+        command: >
+            bash -c "cd scripts && python train_reacher_ac_ppo.py --api_key <API-KEY>"
+    sweep:
+        build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=0
         volumes:
             - .:/app
         command: >
             bash -c "wandb login <API-KEY>
-            && wandb agent --count 4 <RUN-ID>"
+            && wandb agent --count 4 <SWEEP-ID>"
