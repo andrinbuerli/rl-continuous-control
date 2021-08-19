@@ -37,12 +37,12 @@ if __name__ == "__main__":
 
     env = ParallelAgentsUnityEnvironment(target_reward=35,
                                          env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
-    get_policy = lambda: ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
                                                           output_transform=lambda x: torch.tanh(x))
-    get_value_function = lambda: ValueFunction(state_size=env.state_size, seed=42)
+    value_function = ValueFunction(state_size=env.state_size, seed=42)
     agent = PPO_ActorCriticRLAgent(
-        get_actor=get_policy,
-        get_critic=get_value_function,
+        actor=policy,
+        critic=value_function,
         discount_rate=args.discount_rate,
         epsilon=args.epsilon,
         epsilon_decay=args.epsilon_decay,
