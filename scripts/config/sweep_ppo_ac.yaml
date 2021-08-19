@@ -1,25 +1,28 @@
-program: sweep_reacher.py
+name: "PPO Actor Critic style"
+program: sweep_reacher_ac_ppo.py
 method: bayes
 metric:
   name: reward
   goal: maximize
 parameters:
   discount_rate:
-    values: [.99, .8, .5,.2]
+    values: [.99]
   epsilon:
-    values: [1, .1, .01]
+    values: [.01]
   epsilon_decay:
-    values: [.99, .8, .5]
+    values: [.99]
   beta:
-    values: [.1, .01, .001]
+    values: [.1,]
   beta_deay:
-    values: [.995, .9, .8]
+    values: [.995, .8]
   learning_rate:
     min: 0.00001
-    max: 0.001
+    max: 0.01
   SGD_epoch:
     values: [4, 8, 12]
   n_iterations:
     values: [1000]
   max_t:
-    values: [300, 500]
+    values: [500]
+  gae_lambda:
+    values: [0.95, 0.9, 0.8]

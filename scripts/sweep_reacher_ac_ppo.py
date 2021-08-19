@@ -6,7 +6,8 @@ from lib.helper import parse_config_for
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
-from lib.ppo.PPORLAgent import PPORLAgent
+from lib.function.ValueFunction import ValueFunction
+from lib.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
 from lib.log.WandbLogger import WandbSweepLogger
 
 if __name__ == "__main__":
@@ -22,7 +23,8 @@ if __name__ == "__main__":
               "learning_rate": 0.1,
               "SGD_epoch": 1,
               "n_iterations": 1,
-              "max_t": 1
+              "max_t": 1,
+              "gae_lambda": 0.1
             })
 
     # Pass them to wandb.init
@@ -30,11 +32,13 @@ if __name__ == "__main__":
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 
-    env = ParallelAgentsUnityEnvironment(env_binary_path='Reacher_Linux_NoVis/Reacher.x86_64')
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
-                                              output_transform=lambda x: torch.tanh(x))
-    agent = PPORLAgent(
-        policy=policy,
+    env = ParallelAgentsUnityEnvironment(env_binary_path='../Reacher_Linux_NoVis/Reacher.x86_64')
+    get_policy = lambda: ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=42,
+                                                          output_transform=lambda x: torch.tanh(x))
+    get_value_function = lambda: ValueFunction(state_size=env.state_size, seed=42)
+    agent = PPO_ActorCriticRLAgent(
+        get_actor=get_policy,
+        get_critic=get_value_function,
         discount_rate=args.discount_rate,
         epsilon=args.epsilon,
         epsilon_decay=args.epsilon_decay,
@@ -42,7 +46,9 @@ if __name__ == "__main__":
         beta_deay=args.beta_deay,
         learning_rate=args.learning_rate,
         SGD_epoch=args.SGD_epoch,
+        gae_lambda=args.gae_lambda,
         device="cuda:0")
+
     torch.cuda.set_device(0)
     print(f"initialized agent with config: \n {json.dumps(dict(config), sort_keys=True, indent=4)}")
 
