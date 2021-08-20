@@ -7,7 +7,9 @@ services:
         volumes:
             - .:/app
         command: >
-            bash -c "cd scripts && python train_reacher.py --api_key <API-KEY>"
+            bash -c "cd scripts && python train_reacher.py
+            --api_key <API-KEY>
+            --enable_log 1"
     train_reacher_ppo_ac:
         build: .
         environment:
@@ -15,7 +17,20 @@ services:
         volumes:
             - .:/app
         command: >
-            bash -c "cd scripts && python train_reacher_ac_ppo.py --api_key <API-KEY>"
+            bash -c "cd scripts && python train_reacher_ac_ppo.py
+            --api_key <API-KEY>
+            --enable_log 1"
+    train_crawler_ppo_ac:
+        build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=0
+        volumes:
+            - .:/app
+        command: >
+            bash -c "cd scripts
+            && python train_crawler_ac_ppo.py
+            --api_key <API-KEY>
+            --enable_log 1"
     sweep:
         build: .
         environment:
@@ -25,3 +40,12 @@ services:
         command: >
             bash -c "wandb login <API-KEY>
             && wandb agent --count 4 <SWEEP-ID>"
+    jupyter:
+        build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=0
+        volumes:
+            - .:/app
+        ports:
+            - 8080:8080
+        command: jupyter-notebook --allow-root --ip 0.0.0.0 --port 8080
