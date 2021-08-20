@@ -23,6 +23,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             learning_rate: float = 1e-3,
             SGD_epoch: int = 4,
             gae_lambda: float = 0.95,
+            critic_loss_coefficient: float = 0.5,
             device="cpu",
     ):
         """
@@ -54,6 +55,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             SGD_epoch=SGD_epoch,
             device=device)
 
+        self.critic_loss_coefficient = critic_loss_coefficient
         self.gae_lambda = gae_lambda
         self.actor = self.policy
         self.critic = critic.to(device)
@@ -86,8 +88,13 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             value_last_next_state = estimated_next_state_values[:, -1]
-            critic_loss = (((future_discounted_rewards + value_last_next_state.view(-1,
-                                                                                    1)) - estimated_state_values) ** 2).mean()
+            critic_loss = self.critic_loss_coefficient * \
+                          (
+                                  (
+                                          (future_discounted_rewards + value_last_next_state.view(-1, 1))
+                                          - estimated_state_values
+                                  ) ** 2
+                          ).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,

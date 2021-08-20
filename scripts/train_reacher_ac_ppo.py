@@ -30,6 +30,7 @@ if __name__ == "__main__":
             "max_t": 1024,
             "gae_lambda": 0.9,
             "enable_log": 1,
+            "critic_loss_coefficient": .5,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
         })
@@ -53,6 +54,7 @@ if __name__ == "__main__":
         learning_rate=args.learning_rate,
         SGD_epoch=args.SGD_epoch,
         gae_lambda=args.gae_lambda,
+        critic_loss_coefficient=args.critic_loss_coefficient,
         device=device)
 
     if device != "cpu":
