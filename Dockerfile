@@ -8,4 +8,6 @@ COPY requirements.txt /app/requirements.txt
 
 RUN pip install -r requirements.txt
 
+RUN ipython kernel install --name python3 --user
+
 COPY . /app
