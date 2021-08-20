@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print(f"initialized agent with config: \n {json.dumps(config, sort_keys=True, indent=4)}")
 
     logger = WandbLogger(
-        wandb_project_name="udacity-drlnd-p2-reacher-ppo",
+        wandb_project_name="udacity-drlnd-p2-reacher-ppo-v3",
         run_name="PPO A2C",
         api_key=args.api_key,
         config=config) if bool(args.enable_log) else None
