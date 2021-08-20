@@ -74,9 +74,15 @@ class RLAgentTrainer:
         scores = np.zeros(self.env.num_agents)
 
         s_t0, a_t0, al_t0, pa_t0, r_t1, s_t1 = ([] for _ in range(6))
+
+        t_sampled = None
         for t in range(max_t):
             actions, action_logits, log_probs = self.agent.act(states)
             next_states, rewards, dones = self.env.act(actions)
+
+            t_sampled = t
+            if any(dones):
+                break
 
             s_t0.append(states), a_t0.append(actions), al_t0.append(action_logits), pa_t0.append(log_probs)
             r_t1.append(rewards), s_t1.append(next_states)
@@ -91,6 +97,7 @@ class RLAgentTrainer:
         if self.logger is not None:
             self.logger.log({
                 "reward": mean_score,
+                "trajectory_length": t_sampled,
                 **self.agent.get_log_dict()
             })
 

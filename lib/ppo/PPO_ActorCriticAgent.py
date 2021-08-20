@@ -145,5 +145,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
     def get_log_dict(self) -> dict:
         return {
-            "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean()
+            "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean(),
+            "beta": self.beta,
+            "epsilon": self.epsilon,
         }
