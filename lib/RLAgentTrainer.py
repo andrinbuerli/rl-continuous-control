@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+from typing import Union, List
 
 from lib.BaseRLAgent import BaseRLAgent
 from lib.env.ParallelAgentsBaseEnvironment import ParallelAgentsBaseEnvironment
@@ -30,7 +31,8 @@ class RLAgentTrainer:
     def train(
             self,
             n_iterations: int,
-            max_t: int):
+            max_t: Union[List[int], int],
+            max_t_iteration:  Union[List[int], int]):
         """
         RL agent training
 
@@ -38,7 +40,12 @@ class RLAgentTrainer:
         @param max_t: the number of time steps per sampled trajectory
         """
 
+        max_t_original = max_t
         for i_iter in range(1, n_iterations + 1):
+            if type(max_t_original) is list:
+                max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter])
+                max_t = max_t_original[max_t_index]
+
             states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(max_t=max_t)
             print(f"{rewards.max()}\n")
             self.agent.learn(states=states, action_logits=action_logits, action_log_probs=log_probs,
