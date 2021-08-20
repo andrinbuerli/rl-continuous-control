@@ -26,7 +26,7 @@ if __name__ == "__main__":
             "beta_deay": 0.9995,
             "learning_rate": 0.0005,
             "SGD_epoch": 4,
-            "n_iterations": 100000,
+            "n_iterations": 1000000,
             "max_t": 1024,
             "gae_lambda": 0.9,
             "enable_log": 1,
