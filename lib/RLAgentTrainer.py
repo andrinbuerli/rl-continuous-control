@@ -91,6 +91,7 @@ class RLAgentTrainer:
         if self.logger is not None:
             self.logger.log({
                 "reward": mean_score,
+                **self.agent.get_log_dict()
             })
 
         return np.transpose(np.array(s_t0), axes=[1, 0, 2]), np.transpose(np.array(a_t0), axes=[1, 0, 2]), \

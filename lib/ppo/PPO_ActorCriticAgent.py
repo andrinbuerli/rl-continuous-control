@@ -86,7 +86,8 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             value_last_next_state = estimated_next_state_values[:, -1]
-            critic_loss = (((future_discounted_rewards + value_last_next_state.view(-1, 1)) - estimated_state_values) ** 2).mean()
+            critic_loss = (((future_discounted_rewards + value_last_next_state.view(-1,
+                                                                                    1)) - estimated_state_values) ** 2).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,
@@ -134,3 +135,8 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
     def get_name(self) -> str:
         return "PPO_ActorCritic"
+
+    def get_log_dict(self) -> dict:
+        return {
+            "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean()
+        }

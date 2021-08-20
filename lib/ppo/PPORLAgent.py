@@ -140,3 +140,6 @@ class PPORLAgent(BaseRLAgent):
         discounted_rewards = discounts * rewards
         future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
         return future_rewards
+
+    def get_log_dict(self) -> dict:
+        return {}

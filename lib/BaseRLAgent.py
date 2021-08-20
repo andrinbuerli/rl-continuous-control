@@ -64,6 +64,10 @@ class BaseRLAgent:
     def get_name(self) -> str:
         pass
 
+    @abc.abstractmethod
+    def get_log_dict(self) -> dict:
+        pass
+
     def load(self, directory_name: str):
         if not os.path.exists(directory_name):
             raise FileNotFoundError(f"Directory {directory_name} not found")
