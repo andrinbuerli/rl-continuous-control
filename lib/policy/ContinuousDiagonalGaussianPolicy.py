@@ -33,6 +33,6 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
         x = self.policy_network(states.to(torch.float32))
         mu = self.mu_head(x)
         # sigma must not be smaller than 0, so we interpret the output as ln(sigma)
-        var = torch.exp(torch.zeros(self.action_size) + self.logvar)
+        var = torch.exp(self.logvar)
         dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=torch.diag_embed(var))
         return dist
