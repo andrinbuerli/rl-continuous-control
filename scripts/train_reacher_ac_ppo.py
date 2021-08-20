@@ -21,13 +21,14 @@ if __name__ == "__main__":
         config_objects={
             "discount_rate": 0.99,
             "epsilon": 0.01,
-            "epsilon_decay": 0.99,
+            "epsilon_decay": 0.9995,
             "beta": 0.1,
-            "beta_deay": 0.995,
+            "beta_deay": 0.9995,
             "learning_rate": 0.0005,
             "SGD_epoch": 4,
             "n_iterations": 100000,
-            "max_t": 1024,
+            "max_t": [50, 100, 200, 400, 800, 1024],
+            "max_t_iteration": [1000, 2000, 3000, 4000, 5000, 6000],
             "gae_lambda": 0.9,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
@@ -75,7 +76,7 @@ if __name__ == "__main__":
         config=config) if bool(args.enable_log) else None
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger)
-    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t)
+    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration)
 
     env.dispose()
     logger.dispose()

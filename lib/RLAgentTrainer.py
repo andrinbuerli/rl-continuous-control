@@ -32,12 +32,13 @@ class RLAgentTrainer:
             self,
             n_iterations: int,
             max_t: Union[List[int], int],
-            max_t_iteration:  Union[List[int], int]):
+            max_t_iteration:  Union[List[int], int] = None):
         """
         RL agent training
 
         @param n_iterations: number of training iterations
         @param max_t: the number of time steps per sampled trajectory
+        @param max_t_iteration: the iteration number at which the corresponding max_t should be used
         """
 
         max_t_original = max_t
