@@ -20,9 +20,9 @@ if __name__ == "__main__":
         program_name='Reacher PPO Actor Critic style RL agent trainer',
         config_objects={
             "discount_rate": 0.99,
-            "epsilon": 0.1,
+            "epsilon": 0.5,
             "epsilon_decay": 0.9995,
-            "beta": 0.1,
+            "beta": 0.5,
             "beta_deay": 0.9995,
             "learning_rate": 0.0005,
             "SGD_epoch": 4,
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     print(f"initialized agent with config: \n {json.dumps(config, sort_keys=True, indent=4)}")
 
     logger = WandbLogger(
-        wandb_project_name="udacity-drlnd-p2-reacher-ppo-v3",
+        wandb_project_name="udacity-drlnd-p2-reacher-ppo-v4",
         run_name="PPO A2C",
         api_key=args.api_key,
         config=config) if bool(args.enable_log) else None
