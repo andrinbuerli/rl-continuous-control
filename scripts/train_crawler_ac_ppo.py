@@ -35,8 +35,10 @@ if __name__ == "__main__":
             "seed": int(np.random.randint(0, 1e10, 1)[0])
         })
 
-    env = ParallelAgentsUnityEnvironment(target_reward=3000,
-                                         env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
+    env = ParallelAgentsUnityEnvironment(
+        name="Crawler",
+        target_reward=3000,
+        env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
                                               seed=args.seed, output_transform=lambda x: torch.tanh(x))

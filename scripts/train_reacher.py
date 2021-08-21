@@ -2,6 +2,7 @@ import json
 import torch
 import numpy as np
 import sys
+
 sys.path.append("../")
 
 from lib.helper import parse_config_for, extract_config_from
@@ -15,16 +16,18 @@ if __name__ == "__main__":
     args = parse_config_for(
         program_name='Reacher PPO RL agent trainer',
         config_objects={
-                "n_iterations": 10000,
-                "max_t": 100,
-                "enable_log": 0,
-                "discount_rate": 0.99,
-                "api_key": "",
-                "seed": int(np.random.randint(0, 1e10, 1)[0])
-            })
+            "n_iterations": 10000,
+            "max_t": 100,
+            "enable_log": 0,
+            "discount_rate": 0.99,
+            "api_key": "",
+            "seed": int(np.random.randint(0, 1e10, 1)[0])
+        })
 
-    env = ParallelAgentsUnityEnvironment(target_reward=35,
-                                         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
+    env = ParallelAgentsUnityEnvironment(
+        name="Reacher",
+        target_reward=35,
+        env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                               output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(policy=policy, beta=0)

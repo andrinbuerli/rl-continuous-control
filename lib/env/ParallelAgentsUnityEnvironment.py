@@ -8,8 +8,10 @@ class ParallelAgentsUnityEnvironment(ParallelAgentsBaseEnvironment):
 
     def __init__(
             self,
+            name: str,
             target_reward: int,
             env_binary_path: str = 'Reacher_Linux_NoVis/Reacher.x86_64'):
+        self.name = name
         self.env = UnityEnvironment(file_name=env_binary_path)
         self.brain_name = self.env.brain_names[0]
         brain = self.env.brains[self.brain_name]
@@ -34,7 +36,7 @@ class ParallelAgentsUnityEnvironment(ParallelAgentsBaseEnvironment):
 
         super().__init__(
             state_size=state_size, action_size=action_size, action_type=action_type,
-            num_agents=num_agents, target_reward=target_reward)
+            num_agents=num_agents, target_reward=target_reward, name=name)
 
     def reset(self) -> np.ndarray:
         env_info = self.env.reset(train_mode=True)[self.brain_name]  # reset the environment

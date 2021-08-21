@@ -6,11 +6,13 @@ class ParallelAgentsBaseEnvironment:
 
     def __init__(
             self,
+            name: str,
             state_size: int,
             action_size: int,
             action_type: str,
             num_agents: int,
             target_reward: int):
+        self.name = name
         self.target_reward = target_reward
         self.num_agents = num_agents
         self.action_type = action_type

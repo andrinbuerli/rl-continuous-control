@@ -3,6 +3,7 @@ import wandb
 import torch
 import numpy as np
 import sys
+
 sys.path.append("../")
 
 from lib.helper import parse_config_for
@@ -17,25 +18,27 @@ if __name__ == "__main__":
     args = parse_config_for(
         program_name='Reacher PPO RL agent trainer',
         config_objects={
-              "discount_rate": 0.1,
-              "epsilon": 0.1,
-              "epsilon_decay": 0.1,
-              "beta": 0.1,
-              "beta_deay": 0.1,
-              "learning_rate": 0.1,
-              "SGD_epoch": 1,
-              "n_iterations": 1,
-              "max_t": 1,
-              "seed": int(np.random.randint(0, 1e10, 1)[0])
-            })
+            "discount_rate": 0.1,
+            "epsilon": 0.1,
+            "epsilon_decay": 0.1,
+            "beta": 0.1,
+            "beta_deay": 0.1,
+            "learning_rate": 0.1,
+            "SGD_epoch": 1,
+            "n_iterations": 1,
+            "max_t": 1,
+            "seed": int(np.random.randint(0, 1e10, 1)[0])
+        })
 
     # Pass them to wandb.init
     wandb.init(config=args)
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 
-    env = ParallelAgentsUnityEnvironment(target_reward=35,
-                                         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
+    env = ParallelAgentsUnityEnvironment(
+        name="Reacher",
+        target_reward=35,
+        env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                               output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(
