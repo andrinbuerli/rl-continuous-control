@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     logger = WandbSweepLogger(config=config)
 
-    trainer = RLAgentTrainer(agent=agent, env=env, logger=logger)
+    trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
     trainer.train(n_iterations=args.n_iterations, max_t=args.max_t)
 
     env.dispose()

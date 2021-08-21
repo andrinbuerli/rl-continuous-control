@@ -1,6 +1,9 @@
 from collections import deque
 import numpy as np
 from typing import Union, List
+import shutil
+from glob import glob
+import os
 
 from lib.BaseRLAgent import BaseRLAgent
 from lib.env.ParallelAgentsBaseEnvironment import ParallelAgentsBaseEnvironment
@@ -13,7 +16,9 @@ class RLAgentTrainer:
             self,
             agent: BaseRLAgent,
             env: ParallelAgentsBaseEnvironment,
-            logger: BaseLogger = None):
+            seed: int,
+            logger: BaseLogger = None,
+            agent_save_dir="agents"):
         """
         Initialize the RLAgentTrainer
 
@@ -22,11 +27,16 @@ class RLAgentTrainer:
         @param logger: the logger to monitor the training progress
         """
 
+        self.agent_save_dir = agent_save_dir
+        self.seed = seed
         self.logger = logger
         self.env = env
         self.agent = agent
         self.scores = []  # list containing scores from each episode
         self.scores_window = deque(maxlen=100)  # last 100 scores
+
+        if not os.path.exists(self.agent_save_dir):
+            os.mkdir(self.agent_save_dir)
 
     def train(
             self,
@@ -42,6 +52,8 @@ class RLAgentTrainer:
         """
 
         max_t_original = max_t
+
+        max_mean_score = None
         for i_iter in range(1, n_iterations + 1):
             if type(max_t_original) is list:
                 max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter])
@@ -53,19 +65,33 @@ class RLAgentTrainer:
                              rewards=rewards, next_states=next_states)
 
             score_window_mean = np.mean(self.scores_window)
+
+            if max_mean_score is None or max_mean_score < score_window_mean:
+                max_mean_score = score_window_mean
+                directories = list(glob(f"{self.agent_save_dir}/*{self.seed}*"))
+                if len(directories) > 0:
+                    shutil.rmtree(directories[0])
+
+                self.__save_agent(i_iter, score_window_mean)
+
             print('\rIteration {}\tAverage Score: {:.2f}'.format(i_iter, score_window_mean), end="")
             if i_iter % 100 == 0:
                 print('\rIteration {}\tAverage Score: {:.2f}'.format(i_iter, score_window_mean))
             if score_window_mean >= self.env.target_reward:
                 print('\nEnvironment solved in {:d} iterations!\tAverage Score: {:.2f}'.format(i_iter - 100,
                                                                                                score_window_mean))
-                self.agent.save(directory_name=f'{self.agent.get_name()}_{i_iter - 100}-{round(score_window_mean, 2)}')
+                self.__save_agent(i_iter, score_window_mean)
                 break
 
         score_window_mean = np.mean(self.scores_window)
-        print('\nEnvironment was not solved in {:d} iterations!\tAverage Score: {:.2f}'.format(n_iterations - 99,
-                                                                                               score_window_mean))
-        self.agent.save(directory_name=f'{self.agent.get_name()}_{n_iterations - 99}-{round(score_window_mean, 2)}')
+        if score_window_mean < self.env.target_reward:
+            print('\nEnvironment was not solved in {:d} iterations!\tAverage Score: {:.2f}'.format(n_iterations - 99,
+                                                                                                   score_window_mean))
+            self.__save_agent(i_iter, score_window_mean)
+
+    def __save_agent(self, i_iter, score_window_mean):
+        dir_name = f'{self.agent.get_name()}_{i_iter}-{self.seed}-{round(score_window_mean, 2)}'
+        self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
 
     def __collect_trajectories(self, max_t: int):
         """

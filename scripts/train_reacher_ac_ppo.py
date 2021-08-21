@@ -75,7 +75,7 @@ if __name__ == "__main__":
         api_key=args.api_key,
         config=config) if bool(args.enable_log) else None
 
-    trainer = RLAgentTrainer(agent=agent, env=env, logger=logger)
+    trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
     trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration)
 
     env.dispose()
