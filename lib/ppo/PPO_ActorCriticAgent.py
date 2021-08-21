@@ -85,16 +85,15 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
         for _ in range(self.SGD_epoch):
             shape = states.shape
-            estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
-            estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
-            value_last_next_state = estimated_next_state_values[:, -1]
-            critic_loss = self.critic_loss_coefficient * \
-                          (
-                                  (
-                                          (future_discounted_rewards + value_last_next_state.view(-1, 1))
-                                          - estimated_state_values
-                                  ) ** 2
-                          ).mean()
+            last_next_state = next_states[:, -1].view(shape[0], 1, -1)
+
+            all_states = torch.cat((next_states, last_next_state), dim=1)
+
+            estimates = self.critic(all_states.reshape(-1, shape[-1])).view(shape[0], shape[1]+1)
+            estimated_state_values = estimates[:, :-1]
+            estimated_next_state_values = estimates[:, 1:]
+
+            critic_loss = self.critic_loss_coefficient * ((future_discounted_rewards - estimated_state_values) ** 2).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,
