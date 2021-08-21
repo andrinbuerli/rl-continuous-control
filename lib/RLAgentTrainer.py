@@ -125,6 +125,12 @@ class RLAgentTrainer:
             scores += rewards
 
         mean_score = scores.mean()
+
+        if np.isnan(mean_score):
+            print("!!!!! WARNING mean_score is NAN !!!!!")
+            print(scores)
+            mean_score = self.scores_window[-1]
+
         self.scores_window.append(mean_score)  # save most recent score
         self.scores.append(mean_score)  # save most recent score
 
