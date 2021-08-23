@@ -12,7 +12,7 @@ from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironmen
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
 from lib.function.ValueFunction import ValueFunction
 from lib.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
-from lib.log.WandbLogger import WandbLogger
+from lib.log.WandbLogger import WandbSweepLogger
 
 if __name__ == "__main__":
     print(f"Found {torch._C._cuda_getDeviceCount()} GPU")
@@ -37,14 +37,14 @@ if __name__ == "__main__":
         })
 
     # Pass them to wandb.init
-    wandb.init(config=args)
+    wandb.init(config=args, entity="andrinbuerli")
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 
     env = ParallelAgentsUnityEnvironment(
         name="Crawler",
         target_reward=3000,
-        env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
+        env_binary_path='environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
                                               seed=args.seed, output_transform=lambda x: torch.tanh(x))
