@@ -24,7 +24,7 @@ if __name__ == "__main__":
             "epsilon_decay": 0.99,
             "beta": .01,
             "beta_deay": 0.8,
-            "learning_rate": 0.009,
+            "learning_rate": 0.001,
             "SGD_epoch": 4,
             "n_iterations": 1000000,
             "max_t": 2048,
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     print(f"initialized agent with config: \n {json.dumps(config, sort_keys=True, indent=4)}")
 
     logger = WandbLogger(
-        wandb_project_name="udacity-drlnd-p2-crawler-ppo-v2",
+        wandb_project_name="udacity-drlnd-p2-crawler-ppo-v3",
         run_name="PPO A2C",
         api_key=args.api_key,
         config=config) if bool(args.enable_log) else None
