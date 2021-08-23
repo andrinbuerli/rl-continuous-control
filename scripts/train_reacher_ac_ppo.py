@@ -74,7 +74,7 @@ if __name__ == "__main__":
     logger = WandbLogger(
         wandb_project_name="udacity-drlnd-p2-reacher-ppo-v6",
         run_name="PPO A2C",
-        entity="andrinbuerli",
+        entity="andrinburli",
         api_key=args.api_key,
         config=config) if bool(args.enable_log) else None
 

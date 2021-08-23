@@ -74,7 +74,7 @@ if __name__ == "__main__":
         wandb_project_name="udacity-drlnd-p2-crawler-ppo-v3",
         run_name="PPO A2C",
         api_key=args.api_key,
-        entity="andrinbuerli",
+        entity="andrinburli",
         config=config) if bool(args.enable_log) else None
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)

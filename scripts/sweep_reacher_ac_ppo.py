@@ -34,7 +34,7 @@ if __name__ == "__main__":
         })
 
     # Pass them to wandb.init
-    wandb.init(config=args, entity="andrinbuerli")
+    wandb.init(config=args, entity="andrinburli")
     # Access all hyperparameter values through wandb.config
     config = wandb.config
 

@@ -39,7 +39,7 @@ if __name__ == "__main__":
     logger = WandbLogger(
         wandb_project_name="udacity-drlnd-p2-reacher-ppo",
         api_key=args.api_key,
-        entity="andrinbuerli",
+        entity="andrinburli",
         config=config) if bool(args.enable_log) else None
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
