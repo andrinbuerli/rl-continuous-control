@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from typing import Callable
+from random import  random
 
 from lib.agent.BaseRLAgent import BaseRLAgent
 from lib.policy import StochasticBasePolicy
@@ -59,7 +60,7 @@ class DDPGRLAgent(BaseRLAgent):
         self.eps = epsilon
         self.eps_decay = epsilon_decay
         self.state_size = state_size
-        self.action_size = state_size
+        self.action_size = action_size
         self.prio_b_growth = prio_b_growth
         self.prio_b = prio_b_init
         self.prio_a = prio_a
@@ -104,14 +105,17 @@ class DDPGRLAgent(BaseRLAgent):
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.from_numpy(states).float().to(self.device)
 
-        self.argmaxpolicy_local.eval()
-        with torch.no_grad():
-            actions = self.argmaxpolicy_local(states)
-        self.argmaxpolicy_local.train()
-
         # Add random exploration noise
-        actions = actions.cpu().data.numpy() + np.random.uniform(-self.eps, self.eps, actions.shape)
-        return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
+        if random() > self.eps:
+            self.argmaxpolicy_local.eval()
+            with torch.no_grad():
+                actions = self.argmaxpolicy_local(states)
+            self.argmaxpolicy_local.train()
+
+            return actions.cpu().data.numpy(), np.zeros_like(actions), np.zeros((actions.shape[0]))
+        else:
+            return np.random.uniform(-1, 1, (states.shape[0], self.action_size)),\
+                   np.zeros((states.shape[0], self.action_size)), np.zeros((states.shape[0]))
 
     def learn(
             self,
