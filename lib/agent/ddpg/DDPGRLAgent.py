@@ -8,6 +8,7 @@ from lib.policy import StochasticBasePolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
+
 class AnnealedGaussianProcess:
     def __init__(self, mu, sigma, sigma_min, n_steps_annealing):
         self.mu = mu
@@ -27,6 +28,7 @@ class AnnealedGaussianProcess:
     def current_sigma(self):
         sigma = max(self.sigma_min, self.m * float(self.n_steps) + self.c)
         return sigma
+
 
 class OrnsteinUhlenbeckProcess(AnnealedGaussianProcess):
     def __init__(self, theta, mu=0., sigma=1., dt=1e-2, x0=None, size=1, sigma_min=None, n_steps_annealing=1000):
@@ -173,7 +175,6 @@ class DDPGRLAgent(BaseRLAgent):
 
         return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
 
-
     def learn(
             self,
             states: np.ndarray,
@@ -217,6 +218,9 @@ class DDPGRLAgent(BaseRLAgent):
 
     def get_name(self) -> str:
         return "DDPG"
+
+    def reset(self):
+        return self.random_process.reset_states()
 
     def __learn(self, experiences):
         """Update value parameters using given batch of experience tuples.

@@ -70,6 +70,9 @@ class BaseRLAgent:
     def get_log_dict(self) -> dict:
         pass
 
+    def reset(self) -> dict:
+        pass
+
     def load(self, directory_name: str):
         if not os.path.exists(directory_name):
             raise FileNotFoundError(f"Directory {directory_name} not found")

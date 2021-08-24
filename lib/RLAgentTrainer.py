@@ -104,6 +104,7 @@ class RLAgentTrainer:
                 rewards  [trajectory, time_step], next_states [trajectory, time_step, state_size]
             )
         """
+        self.agent.reset()
         states = self.env.reset()
         scores = np.zeros(self.env.num_agents)
 
