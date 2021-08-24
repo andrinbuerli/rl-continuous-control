@@ -10,7 +10,7 @@ from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
 from lib.function.StateValueFunction import StateValueFunction
-from lib.agent.ppo import PPO_ActorCriticRLAgent
+from lib.agent.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
 from lib.log.WandbLogger import WandbLogger
 
 if __name__ == "__main__":
