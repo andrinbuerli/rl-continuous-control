@@ -28,7 +28,7 @@ if __name__ == "__main__":
             "SGD_epoch": 4,
             "n_iterations": 1000000,
             "max_t": 2048,
-            "gae_lambda": 0.6,
+            "gae_lambda": 0.1,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
             "api_key": "",
