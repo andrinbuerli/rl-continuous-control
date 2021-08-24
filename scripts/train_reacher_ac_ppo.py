@@ -21,9 +21,9 @@ if __name__ == "__main__":
         config_objects={
             "discount_rate": 0.99,
             "epsilon": 0.1,
-            "epsilon_decay": 0.9995,
+            "epsilon_decay": 0.99995,
             "beta": 0.1,
-            "beta_deay": 0.9995,
+            "beta_deay": 0.99995,
             "learning_rate": 0.0005,
             "SGD_epoch": 4,
             "n_iterations": 1000000,

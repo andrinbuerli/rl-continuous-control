@@ -21,7 +21,7 @@ if __name__ == "__main__":
         config_objects={
             "gamma": 0.99,
             "epsilon": 1,
-            "epsilon_decay": .99995,
+            "epsilon_decay": .9999995,
             "epsilon_min": 0.01,
             "buffer_size": int(1e5),
             "batch_size": 32,
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     env = ParallelAgentsUnityEnvironment(
         name="Reacher",
         target_reward=35,
-        env_binary_path='../environments/Reacher_Linux_NoVis_Single/Reacher.x86_64')
+        env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
 
     policy = lambda: ContinuousDeterministicPolicy(state_size=env.state_size, action_size=env.action_size,
                                                    seed=args.seed, output_transform=lambda x: torch.tanh(x))
