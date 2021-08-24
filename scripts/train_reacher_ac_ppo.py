@@ -29,7 +29,7 @@ if __name__ == "__main__":
             "n_iterations": 1000000,
             "max_t": [50, 100, 200, 400, 800, 1024],
             "max_t_iteration": [2000, 4000, 6000, 8000, 10000, 12000],
-            "gae_lambda": 0,
+            "gae_lambda": 0.9,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
             "api_key": "",
