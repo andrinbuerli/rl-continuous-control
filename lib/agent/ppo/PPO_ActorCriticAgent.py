@@ -95,14 +95,14 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             self.critic_loss = self.critic_loss_coefficient * \
                                (
                                        (
-                                               (future_discounted_rewards + value_last_next_state.view(-1, 1))
+                                               (future_discounted_rewards) # + value_last_next_state.view(-1, 1))
                                                - estimated_state_values
                                        ) ** 2
                                ).mean()
 
-            advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
-                                                 estimated_next_state_values=estimated_next_state_values,
-                                                 rewards=rewards)
+            advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
+                                                               estimated_next_state_values=estimated_next_state_values,
+                                                               rewards=rewards)
 
             self.actor_loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
                                                                action_logits=action_logits,
@@ -125,7 +125,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
         # this reduces exploration in later runs
         self.beta *= self.beta_deay
 
-    def estimate_advantages(self, estimated_state_values, estimated_next_state_values, rewards):
+    def generalized_advantages_estimation(self, estimated_state_values, estimated_next_state_values, rewards):
         """
         Estimate advantages for each (state, next_state, reward) tuple
 
