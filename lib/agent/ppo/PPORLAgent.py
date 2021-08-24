@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from lib.BaseRLAgent import BaseRLAgent
+from lib.agent.BaseRLAgent import BaseRLAgent
 from lib.policy import BasePolicy
 
 
@@ -58,6 +58,7 @@ class PPORLAgent(BaseRLAgent):
     def learn(
             self,
             states: np.ndarray,
+            actions: np.ndarray,
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,

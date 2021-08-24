@@ -1,12 +1,9 @@
 import numpy as np
 import torch
 
-import copy
-from typing import Callable
-
-from lib.ppo.PPORLAgent import PPORLAgent
+from lib.agent.ppo.PPORLAgent import PPORLAgent
 from lib.policy.BasePolicy import BasePolicy
-from lib.function.ValueFunction import ValueFunction
+from lib.function.StateValueFunction import StateValueFunction
 
 
 class PPO_ActorCriticRLAgent(PPORLAgent):
@@ -14,7 +11,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
     def __init__(
             self,
             actor: BasePolicy,
-            critic: ValueFunction,
+            critic: StateValueFunction,
             discount_rate: float = .99,
             epsilon: float = 0.1,
             epsilon_decay: float = .999,
@@ -75,6 +72,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
     def learn(
             self,
             states: np.ndarray,
+            actions: np.ndarray,
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,

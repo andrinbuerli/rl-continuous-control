@@ -10,8 +10,8 @@ from lib.helper import parse_config_for
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
-from lib.function.ValueFunction import ValueFunction
-from lib.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
+from lib.function.StateValueFunction import StateValueFunction
+from lib.agent.ppo import PPO_ActorCriticRLAgent
 from lib.log.WandbLogger import WandbSweepLogger
 
 if __name__ == "__main__":
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
     policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                               output_transform=lambda x: torch.tanh(x))
-    value_function = ValueFunction(state_size=env.state_size, seed=args.seed)
+    value_function = StateValueFunction(state_size=env.state_size, seed=args.seed)
     agent = PPO_ActorCriticRLAgent(
         actor=policy,
         critic=value_function,

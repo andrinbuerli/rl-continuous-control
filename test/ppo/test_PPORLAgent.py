@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
 from lib.policy.DiscretePolicy import DiscretePolicy
-from lib.ppo.PPORLAgent import PPORLAgent
+from lib.agent.ppo.PPORLAgent import PPORLAgent
 from test.ppo.MockPolicy import MockPolicy
 
 

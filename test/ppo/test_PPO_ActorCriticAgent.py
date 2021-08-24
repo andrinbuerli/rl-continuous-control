@@ -1,9 +1,7 @@
 import torch
 import numpy as np
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
-from lib.policy.DiscretePolicy import DiscretePolicy
-from lib.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
-from lib.function.ValueFunction import ValueFunction
+from lib.agent.ppo import PPO_ActorCriticRLAgent
+from lib.function.StateValueFunction import StateValueFunction
 from test.ppo.MockPolicy import MockPolicy
 
 
@@ -22,7 +20,7 @@ def test_estimate_advantages_calculation():
         gae_lambda=lambd,
         actor=policy,
         discount_rate=gamma,
-        critic=ValueFunction(state_size=1, seed=42)
+        critic=StateValueFunction(state_size=1, seed=42)
     )
 
     rewards = np.array([[-1, 1, 2]])
@@ -75,7 +73,7 @@ def test_estimate_advantages_calculation_recover_td():
         gae_lambda=lambd,
         actor=policy,
         discount_rate=gamma,
-        critic=ValueFunction(state_size=1, seed=42)
+        critic=StateValueFunction(state_size=1, seed=42)
     )
 
     rewards = np.array([[-1, 1, 2]])
@@ -128,7 +126,7 @@ def test_estimate_advantages_calculation_recover_mc():
         gae_lambda=lambd,
         actor=policy,
         discount_rate=gamma,
-        critic=ValueFunction(state_size=1, seed=42)
+        critic=StateValueFunction(state_size=1, seed=42)
     )
 
     rewards = np.array([[-1, 1, 2]])

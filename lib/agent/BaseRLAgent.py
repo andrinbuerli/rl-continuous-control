@@ -44,6 +44,7 @@ class BaseRLAgent:
     def learn(
             self,
             states: np.ndarray,
+            actions: np.ndarray,
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
@@ -52,6 +53,7 @@ class BaseRLAgent:
         Learn from sampled trajectories.
 
         @param states: The state at time step t
+        @param actions: The sampled value of the chosen action at time step t
         @param action_logits: The sampled logit value of the chosen action at time step t
         @param action_log_probs: The log probability of the chosen action at time step t
         @param rewards: The reward received from the environment at time step t+1
