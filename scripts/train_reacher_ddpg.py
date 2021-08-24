@@ -20,7 +20,7 @@ if __name__ == "__main__":
         program_name='Reacher PPO Actor Critic style RL agent trainer',
         config_objects={
             "gamma": 0.99,
-            "epsilon": 1,
+            "epsilon": .5,
             "epsilon_decay": .995,
             "epsilon_min": 0.01,
             "buffer_size": int(1e6),
