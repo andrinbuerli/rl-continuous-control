@@ -112,7 +112,7 @@ class DDPGRLAgent(BaseRLAgent):
                 actions = self.argmaxpolicy_local(states)
             self.argmaxpolicy_local.train()
 
-            return actions.cpu().data.numpy(), np.zeros_like(actions), np.zeros((actions.shape[0]))
+            return actions.detatch().cpu().numpy(), np.zeros_like(actions), np.zeros((actions.shape[0]))
         else:
             return np.random.uniform(-1, 1, (states.shape[0], self.action_size)),\
                    np.zeros((states.shape[0], self.action_size)), np.zeros((states.shape[0]))
