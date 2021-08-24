@@ -2,10 +2,10 @@ from typing import Callable
 import torch
 import torch.nn as nn
 
-from lib.policy.BasePolicy import BasePolicy
+from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
-class ContinuousDiagonalGaussianPolicy(BasePolicy):
+class ContinuousDiagonalGaussianPolicy(StochasticBasePolicy):
     def __init__(
             self,
             state_size: int,

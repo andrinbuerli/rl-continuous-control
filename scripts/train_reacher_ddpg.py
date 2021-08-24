@@ -8,7 +8,7 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
+from lib.policy.ContinuousDeterministicPolicy import ContinuousDeterministicPolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.DDPGRLAgent import DDPGRLAgent
 from lib.log.WandbLogger import WandbLogger
@@ -30,7 +30,7 @@ if __name__ == "__main__":
             "learning_rate": 0.0005,
             "update_for": 16,
             "n_iterations": 1000000,
-            "max_t":  128,
+            "max_t": 128,
             "enable_log": 1,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
@@ -41,8 +41,8 @@ if __name__ == "__main__":
         target_reward=35,
         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
 
-    policy = lambda: ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
-                                                      seed=args.seed, output_transform=lambda x: torch.tanh(x))
+    policy = lambda: ContinuousDeterministicPolicy(state_size=env.state_size, action_size=env.action_size,
+                                                   seed=args.seed, output_transform=lambda x: torch.tanh(x))
     value_function = lambda: StateActionValueFunction(state_size=env.state_size, action_size=env.action_size,
                                                       seed=args.seed)
 

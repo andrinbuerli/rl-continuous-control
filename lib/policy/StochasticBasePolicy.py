@@ -4,7 +4,7 @@ import torch.nn as nn
 from typing import Callable
 
 
-class BasePolicy(nn.Module):
+class StochasticBasePolicy(nn.Module):
 
     def __init__(
             self,

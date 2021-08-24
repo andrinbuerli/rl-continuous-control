@@ -3,7 +3,7 @@ import torch
 from typing import Callable
 
 from lib.agent.BaseRLAgent import BaseRLAgent
-from lib.policy import BasePolicy
+from lib.policy import StochasticBasePolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
@@ -104,14 +104,14 @@ class DDPGRLAgent(BaseRLAgent):
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.from_numpy(states).float().to(self.device)
 
-        self.qnetwork_local.eval()
+        self.argmaxpolicy_local.eval()
         with torch.no_grad():
-            actions, action_logits, dist = self.argmaxpolicy_local(states)
-        self.qnetwork_local.train()
+            actions = self.argmaxpolicy_local(states)
+        self.argmaxpolicy_local.train()
 
         # Add random exploration noise
         actions = actions.cpu().data.numpy() + np.random.uniform(-self.eps, self.eps, actions.shape)
-        return actions, action_logits.cpu().data.numpy(), dist.log_prob(action_logits).detach().cpu().numpy()
+        return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
 
     def learn(
             self,
@@ -180,7 +180,7 @@ class DDPGRLAgent(BaseRLAgent):
         else:
             self.critic_loss = (td_error ** 2).mean()
 
-        actions, action_logits, dist = self.argmaxpolicy_local(states)
+        actions = self.argmaxpolicy_local(states)
         self.policy_gradients = -(self.qnetwork_local(states, actions)).mean()
 
         self.loss = self.critic_loss + self.policy_gradients
@@ -206,7 +206,7 @@ class DDPGRLAgent(BaseRLAgent):
             next_states (PyTorch float tensor): the next states
         """
 
-        next_best_actions, _, _ = self.argmaxpolicy_local.forward(next_states)
+        next_best_actions = self.argmaxpolicy_target.forward(next_states)
         q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
 
         q_targets = rewards + self.gamma * q_values_next_state

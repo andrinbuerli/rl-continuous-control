@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from lib.agent.ppo.PPORLAgent import PPORLAgent
-from lib.policy.BasePolicy import BasePolicy
+from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 from lib.function.StateValueFunction import StateValueFunction
 
 
@@ -10,7 +10,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
     def __init__(
             self,
-            actor: BasePolicy,
+            actor: StochasticBasePolicy,
             critic: StateValueFunction,
             discount_rate: float = .99,
             epsilon: float = 0.1,

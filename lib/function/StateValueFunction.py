@@ -21,6 +21,5 @@ class StateValueFunction(nn.Module):
             nn.Linear(64, 1)
         )
 
-    @abc.abstractmethod
     def forward(self, states: torch.Tensor) -> torch.Tensor:
         return self.value_function_network(states)

@@ -2,14 +2,14 @@ import numpy as np
 import torch
 
 from lib.agent.BaseRLAgent import BaseRLAgent
-from lib.policy import BasePolicy
+from lib.policy import StochasticBasePolicy
 
 
 class PPORLAgent(BaseRLAgent):
 
     def __init__(
             self,
-            policy: BasePolicy,
+            policy: StochasticBasePolicy,
             discount_rate: float = .99,
             epsilon: float = 0.1,
             epsilon_decay: float = .999,

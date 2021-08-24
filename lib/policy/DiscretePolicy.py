@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from typing import Callable
 
-from lib.policy.BasePolicy import BasePolicy
+from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
-class DiscretePolicy(BasePolicy):
+class DiscretePolicy(StochasticBasePolicy):
 
     def __init__(self,
                  state_size: int,
