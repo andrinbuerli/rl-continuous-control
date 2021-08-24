@@ -122,8 +122,6 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             self.actor_optimizer.step()
             self.critic_optimizer.step()
 
-            print("actor_grad", np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.actor.parameters()]).mean())
-
         # the clipping parameter reduces as time goes on
         self.epsilon *= self.epsilon_decay
 
