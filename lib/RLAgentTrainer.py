@@ -98,7 +98,7 @@ class RLAgentTrainer:
         dir_name = f'{self.env.name}-{self.agent.get_name()}_{i_iter}-{self.seed}-{round(score_window_mean, 2)}'
         self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
 
-    def __collect_trajectories(self, max_t: int, intercept = False):
+    def __collect_trajectories(self, max_t: int, intercept: bool = False):
         """
         Sample trajectories from the environment
 
