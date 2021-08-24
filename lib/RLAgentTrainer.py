@@ -46,7 +46,7 @@ class RLAgentTrainer:
             n_iterations: int,
             max_t: Union[List[int], int],
             max_t_iteration:  Union[List[int], int] = None,
-            intercept = True):
+            intercept: bool = False):
         """
         RL agent training
 
