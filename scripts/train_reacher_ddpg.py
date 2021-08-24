@@ -24,13 +24,13 @@ if __name__ == "__main__":
             "epsilon_decay": .99,
             "epsilon_min": 0.01,
             "buffer_size": int(1e5),
-            "batch_size": 64,
+            "batch_size": 32,
             "tau": 1e-3,
             "update_every": 1,
             "learning_rate": 0.0005,
-            "update_for": 64,
+            "update_for": 10,
             "n_iterations": 1000000,
-            "max_t": 1024,
+            "max_t": 20,
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         config=config) if bool(args.enable_log) else None
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
-    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration)
+    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration, intercept=True)
 
     env.dispose()
     logger.dispose()

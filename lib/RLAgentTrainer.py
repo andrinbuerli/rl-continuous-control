@@ -35,6 +35,9 @@ class RLAgentTrainer:
         self.scores = []  # list containing scores from each episode
         self.scores_window = deque(maxlen=100)  # last 100 scores
 
+        self.states = None
+        self.trajectory_scores = None
+
         if not os.path.exists(self.agent_save_dir):
             os.mkdir(self.agent_save_dir)
 
@@ -42,7 +45,8 @@ class RLAgentTrainer:
             self,
             n_iterations: int,
             max_t: Union[List[int], int],
-            max_t_iteration:  Union[List[int], int] = None):
+            max_t_iteration:  Union[List[int], int] = None,
+            intercept = True):
         """
         RL agent training
 
@@ -59,7 +63,8 @@ class RLAgentTrainer:
                 max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
                 max_t = max_t_original[max_t_index]
 
-            states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(max_t=max_t)
+            states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(
+                max_t=max_t, intercept=intercept)
             print(f"{rewards.max()}\n")
             self.agent.learn(states=states, action_logits=action_logits, action_log_probs=log_probs,
                              rewards=rewards, next_states=next_states, actions=actions)
@@ -93,7 +98,7 @@ class RLAgentTrainer:
         dir_name = f'{self.env.name}-{self.agent.get_name()}_{i_iter}-{self.seed}-{round(score_window_mean, 2)}'
         self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
 
-    def __collect_trajectories(self, max_t: int):
+    def __collect_trajectories(self, max_t: int, intercept = False):
         """
         Sample trajectories from the environment
 
@@ -104,32 +109,40 @@ class RLAgentTrainer:
                 rewards  [trajectory, time_step], next_states [trajectory, time_step, state_size]
             )
         """
-        self.agent.reset()
-        states = self.env.reset()
-        scores = np.zeros(self.env.num_agents)
+
+        if not intercept or self.states is None:
+            self.agent.reset()
+            self.states = self.env.reset()
+            self.trajectory_scores = np.zeros(self.env.num_agents)
 
         s_t0, a_t0, al_t0, pa_t0, r_t1, s_t1 = ([] for _ in range(6))
 
         t_sampled = None
         for t in range(max_t):
-            actions, action_logits, log_probs = self.agent.act(states)
+            actions, action_logits, log_probs = self.agent.act(self.states)
             next_states, rewards, dones = self.env.act(actions)
 
             t_sampled = t
             if any(dones):
-                break
+                if intercept:
+                    self.agent.reset()
+                    self.states = self.env.reset()
+                    self.trajectory_scores = np.zeros(self.env.num_agents)
+                    continue
+                else:
+                    break
 
-            s_t0.append(states), a_t0.append(actions), al_t0.append(action_logits), pa_t0.append(log_probs)
+            s_t0.append(self.states), a_t0.append(actions), al_t0.append(action_logits), pa_t0.append(log_probs)
             r_t1.append(rewards), s_t1.append(next_states)
 
-            states = next_states
-            scores += rewards
+            self.states = next_states
+            self.trajectory_scores += rewards
 
-        mean_score = scores.mean()
+        mean_score = self.trajectory_scores.mean()
 
         if np.isnan(mean_score):
             print("!!!!! WARNING mean_score is NAN !!!!!")
-            print(scores)
+            print(self.trajectory_scores)
             mean_score = self.scores_window[-1]
 
         self.scores_window.append(mean_score)  # save most recent score
