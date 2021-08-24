@@ -5,7 +5,7 @@ import shutil
 from glob import glob
 import os
 
-from lib.BaseRLAgent import BaseRLAgent
+from lib.agent.BaseRLAgent import BaseRLAgent
 from lib.env.ParallelAgentsBaseEnvironment import ParallelAgentsBaseEnvironment
 from lib.log.BaseLogger import BaseLogger
 
@@ -62,7 +62,7 @@ class RLAgentTrainer:
             states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(max_t=max_t)
             print(f"{rewards.max()}\n")
             self.agent.learn(states=states, action_logits=action_logits, action_log_probs=log_probs,
-                             rewards=rewards, next_states=next_states)
+                             rewards=rewards, next_states=next_states, actions=actions)
 
             score_window_mean = np.mean(self.scores_window)
 
