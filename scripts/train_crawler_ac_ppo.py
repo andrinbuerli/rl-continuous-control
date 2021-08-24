@@ -24,7 +24,7 @@ if __name__ == "__main__":
             "epsilon_decay": 0.8,
             "beta": .09,
             "beta_deay": 0.66,
-            "learning_rate": 0.01,
+            "learning_rate": 0.0005,
             "SGD_epoch": 4,
             "n_iterations": 1000000,
             "max_t": 2048,
