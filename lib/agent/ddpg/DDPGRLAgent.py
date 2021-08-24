@@ -8,6 +8,26 @@ from lib.policy import StochasticBasePolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
+class AnnealedGaussianProcess:
+    def __init__(self, mu, sigma, sigma_min, n_steps_annealing):
+        self.mu = mu
+        self.sigma = sigma
+        self.n_steps = 0
+
+        if sigma_min is not None:
+            self.m = -float(sigma - sigma_min) / float(n_steps_annealing)
+            self.c = sigma
+            self.sigma_min = sigma_min
+        else:
+            self.m = 0.
+            self.c = sigma
+            self.sigma_min = sigma
+
+    @property
+    def current_sigma(self):
+        sigma = max(self.sigma_min, self.m * float(self.n_steps) + self.c)
+        return sigma
+
 class OrnsteinUhlenbeckProcess(AnnealedGaussianProcess):
     def __init__(self, theta, mu=0., sigma=1., dt=1e-2, x0=None, size=1, sigma_min=None, n_steps_annealing=1000):
         super(OrnsteinUhlenbeckProcess, self).__init__(mu=mu, sigma=sigma, sigma_min=sigma_min, n_steps_annealing=n_steps_annealing)
