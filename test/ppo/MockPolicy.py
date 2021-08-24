@@ -1,10 +1,10 @@
 import torch
 from torch import nn as nn
 
-from lib.policy.BasePolicy import BasePolicy
+from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
-class MockPolicy(BasePolicy):
+class MockPolicy(StochasticBasePolicy):
 
     def __init__(
             self,
