@@ -30,8 +30,7 @@ if __name__ == "__main__":
             "learning_rate": 0.0005,
             "update_for": 32,
             "n_iterations": 1000000,
-            "max_t": [200, 400, 800, 1024],
-            "max_t_iteration": [1000, 2000, 3000, 4000],
+            "max_t":  1024,
             "enable_log": 1,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
