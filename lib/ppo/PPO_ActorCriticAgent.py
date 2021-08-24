@@ -151,12 +151,12 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
-            "critic_loss": self.critic_loss.detach().cpu().numpy() if not None else None,
-            "actor_loss": self.actor_loss.detach().cpu().numpy() if not None else None,
+            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
+            "actor_loss": self.actor_loss.detach().cpu().numpy() if self.actor_loss is not None else None,
             "grad_actor":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.actor.parameters()]).mean()
-                if not None else None,
+                if self.actor_loss is not None else None,
             "grad_critic":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.critic.parameters()]).mean()
-                if not None else None
+                if self.critic_loss is not None else None
         }
