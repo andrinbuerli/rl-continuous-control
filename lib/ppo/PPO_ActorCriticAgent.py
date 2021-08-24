@@ -65,6 +65,10 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
         self.models = [self.actor, self.critic]
         self.model_names = ["actor", "critic"]
 
+        self.loss = None
+        self.critic_loss = None
+        self.actor_loss = None
+
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         return super(PPO_ActorCriticRLAgent, self).act(states)
 
@@ -93,22 +97,22 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             estimated_state_values = estimates[:, :-1]
             estimated_next_state_values = estimates[:, 1:]
 
-            critic_loss = self.critic_loss_coefficient * ((future_discounted_rewards - estimated_state_values) ** 2).mean()
+            self.critic_loss = self.critic_loss_coefficient * ((future_discounted_rewards - estimated_state_values) ** 2).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,
                                                  rewards=rewards)
 
-            actor_loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
+            self.actor_loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
                                                           action_logits=action_logits,
                                                           future_discounted_rewards=advantage)
 
-            self.actor_optimizer.zero_grad()
-            actor_loss.backward(retain_graph=True)
-            self.actor_optimizer.step()
+            self.loss = self.actor_loss + self.critic_loss
 
+            self.actor_optimizer.zero_grad()
             self.critic_optimizer.zero_grad()
-            critic_loss.backward()
+            self.loss.backward()
+            self.actor_optimizer.step()
             self.critic_optimizer.step()
 
         # the clipping parameter reduces as time goes on
@@ -147,4 +151,10 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
+            "critic_loss": self.critic_loss.detach().cpu().numpy(),
+            "actor_loss": self.actor_loss.detach().cpu().numpy(),
+            "grad_actor":
+                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.actor.parameters()]).mean(),
+            "grad_critic":
+                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.critic.parameters()]).mean()
         }
