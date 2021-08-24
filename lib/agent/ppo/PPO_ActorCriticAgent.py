@@ -93,28 +93,30 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             value_last_next_state = estimated_next_state_values[:, -1]
 
             self.critic_loss = self.critic_loss_coefficient * \
-                          (
-                                  (
-                                          (future_discounted_rewards + value_last_next_state.view(-1, 1))
-                                          - estimated_state_values
-                                  ) ** 2
-                          ).mean()
+                               (
+                                       (
+                                               (future_discounted_rewards + value_last_next_state.view(-1, 1))
+                                               - estimated_state_values
+                                       ) ** 2
+                               ).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,
                                                  rewards=rewards)
 
             self.actor_loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
-                                                          action_logits=action_logits,
-                                                          future_discounted_rewards=advantage)
-
-            self.loss = self.actor_loss + self.critic_loss
+                                                               action_logits=action_logits,
+                                                               future_discounted_rewards=advantage)
 
             self.actor_optimizer.zero_grad()
-            self.critic_optimizer.zero_grad()
-            self.loss.backward()
+            self.actor_loss.backward(retain_graph=True)
             self.actor_optimizer.step()
+
+            self.critic_optimizer.zero_grad()
+            self.critic_loss.backward()
             self.critic_optimizer.step()
+
+            self.loss = self.actor_loss + self.critic_loss
 
         # the clipping parameter reduces as time goes on
         self.epsilon *= self.epsilon_decay
