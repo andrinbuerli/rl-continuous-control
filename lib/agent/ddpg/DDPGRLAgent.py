@@ -246,16 +246,18 @@ class DDPGRLAgent(BaseRLAgent):
         else:
             self.critic_loss = (td_error ** 2).mean()
 
+        self.qnetwork_optimizer.zero_grad()
+        self.critic_loss.backward()
+        self.qnetwork_optimizer.step()
+
         actions = self.argmaxpolicy_local(states)
         self.policy_gradients = -(self.qnetwork_local(states, actions)).mean()
 
-        self.loss = self.critic_loss + self.policy_gradients
-
         self.argmaxpolicy_optimizer.zero_grad()
-        self.qnetwork_optimizer.zero_grad()
-        self.loss.backward()
+        self.policy_gradients.backward()
         self.argmaxpolicy_optimizer.step()
-        self.qnetwork_optimizer.step()
+
+        self.loss = self.critic_loss + self.policy_gradients
 
         # ------------------- update target network ------------------- #
         self.soft_update(self.qnetwork_local, self.qnetwork_target)
