@@ -90,9 +90,10 @@ class DDPGRLAgent(BaseRLAgent):
 
         # Replay memory
         if self.prioritized_exp_replay:
-            self.memory = PrioritizedReplayBuffer(action_size, self.buffer_size, self.batch_size, seed=seed, peps=1e-4)
+            self.memory = PrioritizedReplayBuffer(action_size, self.buffer_size, self.batch_size, seed=seed, peps=1e-4,
+                                                  device=device)
         else:
-            self.memory = ReplayBuffer(action_size, self.buffer_size, self.batch_size, seed=seed)
+            self.memory = ReplayBuffer(action_size, self.buffer_size, self.batch_size, seed=seed, device=device)
         # Initialize time step (for updating every self.update_every steps)
         self.t_step = 0
 

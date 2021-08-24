@@ -58,7 +58,7 @@ class ReplayBuffer:
 class PrioritizedReplayBuffer:
     """Fixed-size buffer to store experience tuples."""
 
-    def __init__(self, action_size, buffer_size, batch_size, peps=1e-3, seed=0):
+    def __init__(self, action_size, buffer_size, batch_size, peps=1e-3, seed=0, device="cpu"):
         """Initialize a ReplayBuffer object.
 
         Params
@@ -69,6 +69,7 @@ class PrioritizedReplayBuffer:
             peps (float): constant term added to priority
             seed (int): random seed
         """
+        self.device = device
         self.peps = peps
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)
