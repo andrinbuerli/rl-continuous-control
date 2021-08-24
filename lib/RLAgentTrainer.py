@@ -56,7 +56,7 @@ class RLAgentTrainer:
         max_mean_score = None
         for i_iter in range(1, n_iterations + 1):
             if type(max_t_original) is list:
-                max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter])
+                max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
                 max_t = max_t_original[max_t_index]
 
             states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(max_t=max_t)
