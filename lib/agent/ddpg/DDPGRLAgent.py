@@ -119,7 +119,7 @@ class DDPGRLAgent(BaseRLAgent):
         self.argmaxpolicy_local = get_actor().to(device)
         self.argmaxpolicy_target = get_actor().to(device)
 
-        self.random_process = OrnsteinUhlenbeckProcess(size=self.action_size)
+        self.random_process = OrnsteinUhlenbeckProcess(theta=1, size=self.action_size)
 
         super(DDPGRLAgent, self).__init__(
             models=[self.qnetwork_local, self.qnetwork_target, self.argmaxpolicy_local, self.argmaxpolicy_target],
