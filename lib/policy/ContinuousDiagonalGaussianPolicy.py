@@ -34,5 +34,7 @@ class ContinuousDiagonalGaussianPolicy(BasePolicy):
         mu = self.mu_head(x)
         # sigma must not be smaller than 0, so we interpret the output as ln(sigma)
         var = torch.exp(self.logvar)
-        dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=torch.diag_embed(var))
+        cov_matrix = torch.diag_embed(var)
+        cov_matrix += torch.eye(self.action_size).type_as(cov_matrix) * 1e-6 # numerical stability
+        dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=cov_matrix)
         return dist
