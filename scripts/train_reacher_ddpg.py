@@ -27,7 +27,7 @@ if __name__ == "__main__":
             "batch_size": 64,
             "tau": 1e-3,
             "update_every": 1,
-            "learning_rate": 0.0005,
+            "learning_rate": 0.005,
             "update_for": 16,
             "n_iterations": 1000000,
             "max_t": 1024,
