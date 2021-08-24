@@ -97,7 +97,14 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             estimated_state_values = estimates[:, :-1]
             estimated_next_state_values = estimates[:, 1:]
 
-            self.critic_loss = self.critic_loss_coefficient * ((future_discounted_rewards - estimated_state_values) ** 2).mean()
+            value_last_next_state = estimated_next_state_values[:, -1]
+            self.critic_loss = self.critic_loss_coefficient * \
+                          (
+                                  (
+                                          (future_discounted_rewards + value_last_next_state.view(-1, 1))
+                                          - estimated_state_values
+                                  ) ** 2
+                          ).mean()
 
             advantage = self.estimate_advantages(estimated_state_values=estimated_state_values,
                                                  estimated_next_state_values=estimated_next_state_values,
@@ -114,6 +121,8 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
             self.loss.backward()
             self.actor_optimizer.step()
             self.critic_optimizer.step()
+
+            print("actor_grad", np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.actor.parameters()]).mean())
 
         # the clipping parameter reduces as time goes on
         self.epsilon *= self.epsilon_decay
