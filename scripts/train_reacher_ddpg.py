@@ -28,9 +28,9 @@ if __name__ == "__main__":
             "tau": 1e-3,
             "update_every": 1,
             "learning_rate": 0.0005,
-            "update_for": 32,
+            "update_for": 16,
             "n_iterations": 1000000,
-            "max_t": [200, 400, 800, 1024],
+            "max_t": 1024,
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     env = ParallelAgentsUnityEnvironment(
         name="Reacher",
         target_reward=35,
-        env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
+        env_binary_path='../environments/Reacher_Linux_NoVis_Single/Reacher.x86_64')
 
     policy = lambda: ContinuousDeterministicPolicy(state_size=env.state_size, action_size=env.action_size,
                                                    seed=args.seed, output_transform=lambda x: torch.tanh(x))
