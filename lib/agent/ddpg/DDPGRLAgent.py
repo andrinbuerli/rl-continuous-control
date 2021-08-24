@@ -8,6 +8,25 @@ from lib.policy import StochasticBasePolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
+class OrnsteinUhlenbeckProcess(AnnealedGaussianProcess):
+    def __init__(self, theta, mu=0., sigma=1., dt=1e-2, x0=None, size=1, sigma_min=None, n_steps_annealing=1000):
+        super(OrnsteinUhlenbeckProcess, self).__init__(mu=mu, sigma=sigma, sigma_min=sigma_min, n_steps_annealing=n_steps_annealing)
+        self.theta = theta
+        self.mu = mu
+        self.dt = dt
+        self.x0 = x0
+        self.size = size
+        self.reset_states()
+
+    def sample(self):
+        x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + self.current_sigma * np.sqrt(self.dt) * np.random.normal(size=self.size)
+        self.x_prev = x
+        self.n_steps += 1
+        return x
+
+    def reset_states(self):
+        self.x_prev = self.x0 if self.x0 is not None else np.zeros(self.size)
+
 
 class DDPGRLAgent(BaseRLAgent):
 
@@ -80,6 +99,8 @@ class DDPGRLAgent(BaseRLAgent):
         self.argmaxpolicy_local = get_actor().to(device)
         self.argmaxpolicy_target = get_actor().to(device)
 
+        self.random_process = OrnsteinUhlenbeckProcess(size=self.action_size)
+
         super(DDPGRLAgent, self).__init__(
             models=[self.qnetwork_local, self.qnetwork_target, self.argmaxpolicy_local, self.argmaxpolicy_target],
             device=device,
@@ -102,9 +123,8 @@ class DDPGRLAgent(BaseRLAgent):
         self.policy_gradients = None
         self.critic_loss = None
 
-    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
-        states = torch.from_numpy(states).float().to(self.device)
-
+    def act(self, states: np.ndarray, training: int = 1) -> (np.ndarray, np.ndarray):
+        """
         # Add random exploration noise
         if random() > self.eps:
             self.argmaxpolicy_local.eval()
@@ -117,6 +137,22 @@ class DDPGRLAgent(BaseRLAgent):
         else:
             return np.random.uniform(-1, 1, (states.shape[0], self.action_size)),\
                    np.zeros((states.shape[0], self.action_size)), np.zeros((states.shape[0]))
+        """
+
+        states = torch.from_numpy(states).float().to(self.device)
+
+        self.argmaxpolicy_local.eval()
+        with torch.no_grad():
+            actions = self.argmaxpolicy_local(states)
+        self.argmaxpolicy_local.train()
+
+        actions = actions.detach().cpu().numpy()
+
+        actions += training * max(self.eps, 0) * self.random_process.sample()
+        actions = np.clip(actions, -1., 1.)
+
+        return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
+
 
     def learn(
             self,
