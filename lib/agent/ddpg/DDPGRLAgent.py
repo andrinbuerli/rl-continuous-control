@@ -181,7 +181,7 @@ class DDPGRLAgent(BaseRLAgent):
             self.critic_loss = (td_error ** 2).mean()
 
         actions, action_logits, dist = self.argmaxpolicy_local(states)
-        self.policy_gradients = -(dist.log_prob(action_logits) * self.qnetwork_local(states, actions)).mean()
+        self.policy_gradients = -(self.qnetwork_local(states, actions)).mean()
 
         self.loss = self.critic_loss + self.policy_gradients
 
