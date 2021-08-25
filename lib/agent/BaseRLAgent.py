@@ -73,12 +73,12 @@ class BaseRLAgent:
     def reset(self) -> dict:
         pass
 
-    def load(self, directory_name: str):
+    def load(self, directory_name: str, device="cpu"):
         if not os.path.exists(directory_name):
             raise FileNotFoundError(f"Directory {directory_name} not found")
 
         for name, model in zip(self.model_names, self.models):
-            model.load_state_dict(torch.load(os.path.join(directory_name, name + ".pth")))
+            model.load_state_dict(torch.load(os.path.join(directory_name, name + ".pth"), map_location=torch.device(device)))
 
     def save(self, directory_name: str):
         if not os.path.exists(directory_name):
