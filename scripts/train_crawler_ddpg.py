@@ -17,14 +17,14 @@ if __name__ == "__main__":
     print(f"Found {torch._C._cuda_getDeviceCount()} GPU")
 
     args = parse_config_for(
-        program_name='Reacher PPO Actor Critic style RL agent trainer',
+        program_name='Crawler PPO Actor Critic style RL agent trainer',
         config_objects={
             "gamma": 0.99,
             "epsilon": 1,
-            "epsilon_decay": .99995,
+            "epsilon_decay": .999995,
             "epsilon_min": 0.01,
             "buffer_size": int(1e6),
-            "batch_size": 64,
+            "batch_size": 128,
             "tau": 1e-3,
             "update_every": 1,
             "learning_rate": 0.0001,

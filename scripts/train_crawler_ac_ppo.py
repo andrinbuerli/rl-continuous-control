@@ -17,18 +17,18 @@ if __name__ == "__main__":
     print(f"Found {torch._C._cuda_getDeviceCount()} GPU")
 
     args = parse_config_for(
-        program_name='Reacher PPO Actor Critic style RL agent trainer',
+        program_name='Crawler PPO Actor Critic style RL agent trainer',
         config_objects={
-            "discount_rate": 0.7,
+            "discount_rate": 0.99,
             "epsilon": 0.1,
-            "epsilon_decay": 0.8,
-            "beta": .09,
-            "beta_deay": 0.66,
+            "epsilon_decay": 0.99995,
+            "beta": 0.1,
+            "beta_deay": 0.99995,
             "learning_rate": 0.0005,
             "SGD_epoch": 4,
             "n_iterations": 1000000,
             "max_t": 2048,
-            "gae_lambda": 0.1,
+            "gae_lambda": 0.6,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
             "api_key": "",
