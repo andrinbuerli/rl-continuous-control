@@ -11,7 +11,7 @@ The first environment is called *Reacher*, here the task is to control a double-
 
 |      Initial (random) policy:      |            Learned policy:             |
 | :--------------------------------: | :------------------------------------: |
-| <img src="initial_reacher.gif"  /> | <img src="initial_reacher.gif"  />TBD! |
+| <img src="initial_reacher.gif"  /> | <img src="trained_reacher.gif"  />TBD! |
 
 The observation space consists of 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm. Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1. The environment is considered solved if a mean reward of 35 is reached over 100 consecutive episodes.
 
