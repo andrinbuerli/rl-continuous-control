@@ -3,32 +3,42 @@ services:
     train_reacher_ppo:
         build: .
         environment:
-            - NVIDIA_VISIBLE_DEVICES=1
+            - NVIDIA_VISIBLE_DEVICES=0
         volumes:
             - .:/app
         command: >
-            bash -c "cd scripts && python train_reacher.py
+            bash -c "cd scripts && python train_reacher_ppo.py
             --api_key <API-KEY>
             --enable_log 1"
-    train_reacher_ppo_ac:
-        build: .
-        environment:
-            - NVIDIA_VISIBLE_DEVICES=1
-        volumes:
-            - .:/app
-        command: >
-            bash -c "cd scripts && python train_reacher_ac_ppo.py
-            --api_key <API-KEY>
-            --enable_log 1"
-    train_crawler_ppo_ac:
+    train_reacher_ddpg:
         build: .
         environment:
             - NVIDIA_VISIBLE_DEVICES=0
         volumes:
             - .:/app
         command: >
+            bash -c "cd scripts && python train_reacher_ddpg.py
+            --api_key <API-KEY>
+            --enable_log 1"
+    train_crawler_ddpg:
+        build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=1
+        volumes:
+            - .:/app
+        command: >
+            bash -c "cd scripts && python train_crawler_ddpg.py
+            --api_key <API-KEY>
+            --enable_log 1"
+    train_crawler_ppo:
+        build: .
+        environment:
+            - NVIDIA_VISIBLE_DEVICES=1
+        volumes:
+            - .:/app
+        command: >
             bash -c "cd scripts
-            && python train_crawler_ac_ppo.py
+            && python train_crawler_ppo.py
             --api_key <API-KEY>
             --enable_log 1"
     sweep:
