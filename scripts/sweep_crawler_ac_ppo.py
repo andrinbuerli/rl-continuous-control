@@ -9,7 +9,7 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
+from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 from lib.function.StateValueFunction import StateValueFunction
 from lib.agent.ppo import PPO_ActorCriticRLAgent
 from lib.log.WandbLogger import WandbSweepLogger
@@ -46,8 +46,8 @@ if __name__ == "__main__":
         target_reward=3000,
         env_binary_path='environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
-                                              seed=args.seed, output_transform=lambda x: torch.tanh(x))
+    policy = StochasticContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
+                                                seed=args.seed, output_transform=lambda x: torch.tanh(x))
     value_function = StateValueFunction(state_size=env.state_size, seed=args.seed)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"

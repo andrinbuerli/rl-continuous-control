@@ -8,7 +8,7 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
+from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 from lib.agent.ppo.PPORLAgent import PPORLAgent
 from lib.log.WandbLogger import WandbLogger
 
@@ -28,8 +28,8 @@ if __name__ == "__main__":
         name="Reacher",
         target_reward=35,
         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
-    policy = ContinuousDiagonalGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
-                                              output_transform=lambda x: torch.tanh(x))
+    policy = StochasticContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
+                                                output_transform=lambda x: torch.tanh(x))
     agent = PPORLAgent(policy=policy, beta=0)
 
     config = extract_config_from(env, policy, agent, {"n_iterations": args.n_iterations, "max_t": args.max_t})
