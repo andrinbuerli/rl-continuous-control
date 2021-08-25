@@ -73,7 +73,7 @@ class RLAgentTrainer:
             score_window_mean = np.mean(self.scores_window)
 
             if max_mean_score is None or max_mean_score < score_window_mean:
-                max_mean_score = score_window_mean
+                max_mean_score = score_window_mean if not np.isnan(score_window_mean) else max_mean_score
                 directories = list(glob(f"{self.agent_save_dir}/*{self.seed}*"))
                 if len(directories) > 0:
                     shutil.rmtree(directories[0])
