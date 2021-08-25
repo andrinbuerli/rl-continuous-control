@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Callable
 import torch
 
 from lib.agent.BaseRLAgent import BaseRLAgent
@@ -12,45 +13,49 @@ class DDPGRLAgent(BaseRLAgent):
             self,
             get_actor,
             get_critic,
-            state_size,
-            action_size,
-            seed=0,
-            buffer_size=int(1e5),
-            batch_size=64,
-            gamma=0.99,
-            tau=1e-3,
-            lr=5e-4,
-            update_every=4,
-            update_for=4,
-            double_dqn=False,
-            dueling_networks=False,
-            prioritized_exp_replay=False,
-            prio_a=0.7,
-            prio_b_init=0.5,
-            prio_b_growth=1.1,
-            epsilon=1,
-            epsilon_decay=.9,
-            epsilon_min=.01,
+            state_size: int,
+            action_size: int,
+            seed: int = 0,
+            buffer_size: int = int(1e5),
+            batch_size: int = 64,
+            gamma: float = 0.99,
+            tau: float = 1e-3,
+            lr: float = 5e-4,
+            update_every: int = 4,
+            update_for: int = 4,
+            prioritized_exp_replay: bool = False,
+            prio_a: float = 0.7,
+            prio_b_init: float = 0.5,
+            prio_b_growth: float = 1.1,
+            epsilon: float = 1.0,
+            epsilon_decay: float = .9,
+            epsilon_min: float = .01,
             device="cpu"
     ):
-        """Initialize an Agent object.
+        """
+        Deep deterministic policy gradients (DDPG) agent.
+        https://arxiv.org/pdf/1509.02971.pdf
 
-        Params
-        ======
-            state_size (int): dimension of each state
-            action_size (int): dimension of each action
-            seed (int): random seed
-            buffer_size (int): replay buffer size
-            batch_size (int): minibatch size
-            gamma (float): discount factor
-            tau (float): for soft update of target parameters, θ_target = τ*θ_local + (1 - τ)*θ_target
-            lr (float): learning rate
-            update_every (int): how often to update the network, after every n step
-            double_dqn (bool): use double Q learning with target network as secondary network
-            prioritized_exp_replay (bool): use prioritized experience replay
-            prio_a (float): a = 0 uniform sampling, a = 1 fully prioritized sampling
-            prio_b_init (float): importance sampling weight init
-            prio_b_gowth (float): importance sampling weight growth (will grow to max of 1)
+        @param get_actor:
+        @param get_critic:
+        @param state_size: dimension of each state
+        @param action_size: dimension of each action
+        @param seed: random seed
+        @param buffer_size: replay buffer size
+        @param batch_size: minibatch size
+        @param gamma: discount factor
+        @param tau: for soft update of target parameters, θ_target = τ*θ_local + (1 - τ)*θ_target
+        @param lr: learning rate
+        @param update_every: how often to update the network, after every n step
+        @param update_for: how many minibatches should be sampled at every update step
+        @param prioritized_exp_replay: use prioritized experience replay
+        @param prio_a: a = 0 uniform sampling, a = 1 fully prioritized sampling
+        @param prio_b_init: importance sampling weight init
+        @param prio_b_growth: importance sampling weight growth (will grow to max of 1)
+        @param epsilon:
+        @param epsilon_decay:
+        @param epsilon_min:
+        @param device: the device on which the calculations are to be executed
         """
         self.epsilon_min = epsilon_min
         self.update_for = update_for
@@ -62,8 +67,6 @@ class DDPGRLAgent(BaseRLAgent):
         self.prio_b = prio_b_init
         self.prio_a = prio_a
         self.prioritized_exp_replay = prioritized_exp_replay
-        self.dueling_networks = dueling_networks
-        self.double_dqn = double_dqn
         self.update_every = update_every
         self.lr = lr
         self.tau = tau

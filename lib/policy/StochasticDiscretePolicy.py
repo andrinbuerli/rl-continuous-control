@@ -5,7 +5,7 @@ from typing import Callable
 from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
-class DiscretePolicy(StochasticBasePolicy):
+class StochasticDiscretePolicy(StochasticBasePolicy):
 
     def __init__(self,
                  state_size: int,

@@ -5,7 +5,7 @@ import torch.nn as nn
 from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
-class ContinuousDiagonalGaussianPolicy(StochasticBasePolicy):
+class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
     def __init__(
             self,
             state_size: int,

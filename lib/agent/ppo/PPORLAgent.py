@@ -17,7 +17,7 @@ class PPORLAgent(BaseRLAgent):
             beta_decay: float = .995,
             learning_rate: float = 1e-3,
             SGD_epoch: int = 4,
-            device = "cpu",
+            device: str = "cpu",
     ):
         """
         Plain proximal policy approximation agent
