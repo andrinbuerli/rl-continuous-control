@@ -28,7 +28,7 @@ if __name__ == "__main__":
             "tau": 1e-3,
             "update_every": 1,
             "learning_rate": 0.0001,
-            "update_for": 20,
+            "update_for": 10,
             "n_iterations": 1000000,
             "max_t": 20,
             "max_t_iteration": [2000, 4000, 6000, 8000],
