@@ -37,6 +37,7 @@ class RLAgentTrainer:
 
         self.states = None
         self.trajectory_scores = None
+        self.t_sampled = None
 
         if not os.path.exists(self.agent_save_dir):
             os.mkdir(self.agent_save_dir)
@@ -114,6 +115,7 @@ class RLAgentTrainer:
             self.agent.reset()
             self.states = self.env.reset()
             self.trajectory_scores = np.zeros(self.env.num_agents)
+            self.t_sampled = 0
 
         s_t0, a_t0, al_t0, pa_t0, r_t1, s_t1 = ([] for _ in range(6))
 
@@ -122,12 +124,16 @@ class RLAgentTrainer:
             actions, action_logits, log_probs = self.agent.act(self.states)
             next_states, rewards, dones = self.env.act(actions)
 
-            t_sampled = t
+            t_sampled = t + 1
             if any(dones):
                 if intercept:
+                    self.t_sampled += t_sampled
+                    self.__log_and_metrics(self.t_sampled)
+
                     self.agent.reset()
                     self.states = self.env.reset()
                     self.trajectory_scores = np.zeros(self.env.num_agents)
+                    self.t_sampled = 0
                     continue
                 else:
                     break
@@ -138,23 +144,26 @@ class RLAgentTrainer:
             self.states = next_states
             self.trajectory_scores += rewards
 
-        mean_score = self.trajectory_scores.mean()
+        if not intercept:
+            self.__log_and_metrics(t_sampled)
+        else:
+            self.t_sampled += t_sampled
 
+        return np.transpose(np.array(s_t0), axes=[1, 0, 2]), np.transpose(np.array(a_t0), axes=[1, 0, 2]), \
+               np.transpose(np.array(al_t0), axes=[1, 0, 2]), np.transpose(np.array(pa_t0), axes=[1, 0]), \
+               np.transpose(np.array(r_t1), axes=[1, 0]), np.transpose(np.array(s_t1), axes=[1, 0, 2]),
+
+    def __log_and_metrics(self, t_sampled):
+        mean_score = self.trajectory_scores.mean()
         if np.isnan(mean_score):
             print("!!!!! WARNING mean_score is NAN !!!!!")
             print(self.trajectory_scores)
             mean_score = self.scores_window[-1]
-
         self.scores_window.append(mean_score)  # save most recent score
         self.scores.append(mean_score)  # save most recent score
-
         if self.logger is not None:
             self.logger.log({
                 "reward": mean_score,
                 "trajectory_length": t_sampled,
                 **self.agent.get_log_dict()
             })
-
-        return np.transpose(np.array(s_t0), axes=[1, 0, 2]), np.transpose(np.array(a_t0), axes=[1, 0, 2]), \
-               np.transpose(np.array(al_t0), axes=[1, 0, 2]), np.transpose(np.array(pa_t0), axes=[1, 0]), \
-               np.transpose(np.array(r_t1), axes=[1, 0]), np.transpose(np.array(s_t1), axes=[1, 0, 2]),
