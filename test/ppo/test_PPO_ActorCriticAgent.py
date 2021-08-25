@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from lib.agent.ppo import PPO_ActorCriticRLAgent
+from lib.agent.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
 from lib.function.StateValueFunction import StateValueFunction
 from test.ppo.MockPolicy import MockPolicy
 
@@ -49,9 +49,9 @@ def test_estimate_advantages_calculation():
     )
 
     # act
-    advantages = testee.estimate_advantages(estimated_state_values=torch.tensor(Vt_0),
-                                            estimated_next_state_values=torch.tensor(Vt_1),
-                                            rewards=torch.tensor(rewards)).detach()\
+    advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
+                                                          estimated_next_state_values=torch.tensor(Vt_1),
+                                                          rewards=torch.tensor(rewards)).detach()\
         .cpu().numpy()
 
     # assert
@@ -102,9 +102,9 @@ def test_estimate_advantages_calculation_recover_td():
     )
 
     # act
-    advantages = testee.estimate_advantages(estimated_state_values=torch.tensor(Vt_0),
-                                            estimated_next_state_values=torch.tensor(Vt_1),
-                                            rewards=torch.tensor(rewards)).detach()\
+    advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
+                                                          estimated_next_state_values=torch.tensor(Vt_1),
+                                                          rewards=torch.tensor(rewards)).detach()\
         .cpu().numpy()
 
     # assert
@@ -147,9 +147,9 @@ def test_estimate_advantages_calculation_recover_mc():
     )
 
     # act
-    advantages = testee.estimate_advantages(estimated_state_values=torch.tensor(Vt_0),
-                                            estimated_next_state_values=torch.tensor(Vt_1),
-                                            rewards=torch.tensor(rewards)).detach()\
+    advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
+                                                          estimated_next_state_values=torch.tensor(Vt_1),
+                                                          rewards=torch.tensor(rewards)).detach()\
         .cpu().numpy()
 
     # assert

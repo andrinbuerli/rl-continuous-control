@@ -26,7 +26,7 @@ class StochasticBasePolicy(nn.Module):
         self.state_size = state_size
         self.seed = torch.manual_seed(seed)
 
-    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor, torch.Tensor):
+    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor, torch.distributions.Distribution):
         """
          Determine next action based on the current states
 

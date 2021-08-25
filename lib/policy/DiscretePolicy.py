@@ -28,5 +28,5 @@ class DiscretePolicy(StochasticBasePolicy):
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
         probs = self.policy_network(states.to(torch.float32))
-        dist = torch.distributions.Categorical(probs)
+        dist = torch.distributions.OneHotCategorical(probs)
         return dist

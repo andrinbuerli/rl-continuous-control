@@ -11,7 +11,7 @@ def test_forward_shape():
 
     actions, action_logits, dist = testee.forward(torch.tensor(states))
 
-    assert list(actions.shape) == [10] and list(action_logits.shape) == [10]
+    assert list(actions.shape) == [10, 2] and list(action_logits.shape) == [10, 2]
 
 
 def test_forward_dtype():
@@ -21,4 +21,5 @@ def test_forward_dtype():
 
     actions, action_logits, dist = testee.forward(torch.tensor(states))
 
-    assert actions.dtype == torch.int64
+    assert actions.dtype == torch.float32 \
+           and actions.min() == 0 and actions.max() == 1 # one-hot

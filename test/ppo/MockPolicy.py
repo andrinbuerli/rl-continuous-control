@@ -17,5 +17,9 @@ class MockPolicy(StochasticBasePolicy):
         self.return_forward_values = return_forward_values
         self.mock_layer = nn.Linear(64, action_size)
 
-    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor):
+    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor, torch.distributions.Distribution):
         return self.return_forward_values
+
+    def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
+        return self.return_forward_values[-1]
+
