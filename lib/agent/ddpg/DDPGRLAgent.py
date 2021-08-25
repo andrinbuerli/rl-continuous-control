@@ -128,7 +128,7 @@ class DDPGRLAgent(BaseRLAgent):
             models=[self.qnetwork_local, self.qnetwork_target, self.argmaxpolicy_local, self.argmaxpolicy_target],
             device=device,
             learning_rate=lr,
-            model_names=["qnetwork_local, qnetwork_target", "policy_local, policy_target"])
+            model_names=["qnetwork_local", "qnetwork_target", "policy_local", "policy_target"])
 
         self.qnetwork_optimizer = self._get_optimizer(self.qnetwork_local.parameters())
         self.argmaxpolicy_optimizer = self._get_optimizer(self.argmaxpolicy_local.parameters())
