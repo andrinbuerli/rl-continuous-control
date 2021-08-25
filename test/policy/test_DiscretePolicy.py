@@ -1,11 +1,11 @@
 import numpy as np
-from lib.policy.DiscretePolicy import DiscretePolicy
+from lib.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
 
 import torch
 
 
 def test_forward_shape():
-    testee = DiscretePolicy(state_size=10, action_size=2, seed=42)
+    testee = StochasticDiscretePolicy(state_size=10, action_size=2, seed=42)
 
     states = np.random.uniform(0, 1, (10, 10))
 
@@ -15,7 +15,7 @@ def test_forward_shape():
 
 
 def test_forward_dtype():
-    testee = DiscretePolicy(state_size=10, action_size=2, seed=42)
+    testee = StochasticDiscretePolicy(state_size=10, action_size=2, seed=42)
 
     states = np.random.uniform(0, 1, (10, 10))
 

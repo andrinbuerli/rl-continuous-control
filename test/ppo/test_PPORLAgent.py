@@ -1,14 +1,14 @@
 import torch
 import numpy as np
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
-from lib.policy.DiscretePolicy import DiscretePolicy
+from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
+from lib.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
 from lib.agent.ppo.PPORLAgent import PPORLAgent
 from test.ppo.MockPolicy import MockPolicy
 
 
 def test_clipped_surrogate_function():
     # arrange
-    policy = ContinuousDiagonalGaussianPolicy(state_size=1, action_size=1, seed=42)
+    policy = StochasticContinuousGaussianPolicy(state_size=1, action_size=1, seed=42)
     testee = PPORLAgent(
         policy=policy
     )
@@ -83,7 +83,7 @@ def test_clipped_surrogate_calculation():
 
 def test_clipped_surrogate_function_backprop():
     # arrange
-    policy = ContinuousDiagonalGaussianPolicy(state_size=2, action_size=2, seed=42)
+    policy = StochasticContinuousGaussianPolicy(state_size=2, action_size=2, seed=42)
 
     testee = PPORLAgent(
         policy=policy
@@ -114,7 +114,7 @@ def test_clipped_surrogate_function_backprop():
 
 def test_act_continuous():
     # arrange
-    policy = ContinuousDiagonalGaussianPolicy(state_size=2, action_size=2, seed=42)
+    policy = StochasticContinuousGaussianPolicy(state_size=2, action_size=2, seed=42)
 
     testee = PPORLAgent(
         policy=policy
@@ -134,7 +134,7 @@ def test_act_continuous():
 
 def test_act_discrete():
     # arrange
-    policy = DiscretePolicy(state_size=2, action_size=2, seed=42)
+    policy = StochasticDiscretePolicy(state_size=2, action_size=2, seed=42)
 
     testee = PPORLAgent(
         policy=policy
@@ -155,7 +155,7 @@ def test_act_discrete():
 
 def test_learn():
     # arrange
-    policy = ContinuousDiagonalGaussianPolicy(state_size=2, action_size=2, seed=42)
+    policy = StochasticContinuousGaussianPolicy(state_size=2, action_size=2, seed=42)
 
     testee = PPORLAgent(
         policy=policy,
@@ -185,7 +185,7 @@ def test_learn():
 
 def test_learn_discrete():
     # arrange
-    policy = DiscretePolicy(state_size=2, action_size=2, seed=42)
+    policy = StochasticDiscretePolicy(state_size=2, action_size=2, seed=42)
 
     testee = PPORLAgent(
         policy=policy,

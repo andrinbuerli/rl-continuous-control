@@ -1,11 +1,11 @@
 import numpy as np
-from lib.policy.ContinuousDiagonalGaussianPolicy import ContinuousDiagonalGaussianPolicy
+from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 
 import torch
 
 
 def test_forward_shape():
-    testee = ContinuousDiagonalGaussianPolicy(state_size=10, action_size=2, seed=42)
+    testee = StochasticContinuousGaussianPolicy(state_size=10, action_size=2, seed=42)
 
     states = np.random.uniform(0, 1, (10, 10))
 
@@ -15,7 +15,7 @@ def test_forward_shape():
 
 
 def test_forward_type():
-    testee = ContinuousDiagonalGaussianPolicy(state_size=10, action_size=2, seed=42)
+    testee = StochasticContinuousGaussianPolicy(state_size=10, action_size=2, seed=42)
 
     states = np.random.uniform(0, 1, (10, 10))
 
