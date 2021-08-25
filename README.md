@@ -9,9 +9,9 @@ In this project, an agent is trained to interact in two different environments w
 
 The first environment is called *Reacher*, here the task is to control a double-jointed arm such that it can move to target locations. A reward of +0.1 is provided for each step that the agent's hand is in the goal location. Thus, the goal of your agent is to maintain its position at the target location for as many time steps as possible.
 
-|      Initial (random) policy:      |            Learned policy:             |
-| :--------------------------------: | :------------------------------------: |
-| <img src="initial_reacher.gif"  /> | <img src="trained_reacher.gif"  />TBD! |
+|        Initial (random) policy:         |               Learned policy:               |
+| :-------------------------------------: | :-----------------------------------------: |
+| <img src="imgs\initial_reacher.gif"  /> | <img src="imgs\trained_reacher.gif"  />TBD! |
 
 The observation space consists of 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm. Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1. The environment is considered solved if a mean reward of 35 is reached over 100 consecutive episodes.
 
@@ -24,9 +24,9 @@ The second environment is called *Crawler*.  In this continuous control environm
 
 It is a product of all the rewards, this helps the agent try to maximize all rewards instead of the easiest rewards. 
 
-|      Initial (random) policy:      |            Learned policy:             |
-| :--------------------------------: | :------------------------------------: |
-| <img src="initial_crawler.gif"  /> | <img src="initial_crawler.gif"  />TBD! |
+|        Initial (random) policy:         |               Learned policy:               |
+| :-------------------------------------: | :-----------------------------------------: |
+| <img src="imgs\initial_crawler.gif"  /> | <img src="imgs\initial_crawler.gif"  />TBD! |
 
 The observation space consists of 172 variables corresponding to position, rotation, velocity, and angular velocities of each limb plus the acceleration and angular acceleration of the body. Each action is a vector with 20 numbers, corresponding to target rotations for joints. The environment is considered solved if a mean reward of 3000 is reached over 100 consecutive episodes.
 
