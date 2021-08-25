@@ -25,6 +25,6 @@ class DeterministicBasePolicy(nn.Module):
         self.seed = torch.manual_seed(seed)
 
     @abc.abstractmethod
-    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor, torch.Tensor):
+    def forward(self, states: torch.Tensor) -> torch.Tensor:
         pass
 

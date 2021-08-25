@@ -8,7 +8,7 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.ContinuousDeterministicPolicy import ContinuousDeterministicPolicy
+from lib.policy.DeterministicContinuousGaussianPolicy import DeterministicContinuousGaussianPolicy
 from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.DDPGRLAgent import DDPGRLAgent
 from lib.log.WandbLogger import WandbLogger
@@ -42,8 +42,8 @@ if __name__ == "__main__":
         target_reward=45,
         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
 
-    policy = lambda: ContinuousDeterministicPolicy(state_size=env.state_size, action_size=env.action_size,
-                                                   seed=args.seed, output_transform=lambda x: torch.tanh(x))
+    policy = lambda: DeterministicContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
+                                                           seed=args.seed, output_transform=lambda x: torch.tanh(x))
     value_function = lambda: StateActionValueFunction(state_size=env.state_size, action_size=env.action_size,
                                                       seed=args.seed)
 

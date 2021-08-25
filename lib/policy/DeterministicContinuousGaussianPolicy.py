@@ -5,7 +5,7 @@ import torch.nn as nn
 from lib.policy.DeterministicBasePolicy import DeterministicBasePolicy
 
 
-class ContinuousDeterministicPolicy(DeterministicBasePolicy):
+class DeterministicContinuousGaussianPolicy(DeterministicBasePolicy):
     def __init__(
             self,
             state_size: int,
@@ -27,7 +27,7 @@ class ContinuousDeterministicPolicy(DeterministicBasePolicy):
             nn.Linear(64, self.action_size)
         )
 
-    def forward(self, states: torch.Tensor) -> torch.distributions.Distribution:
+    def forward(self, states: torch.Tensor) -> torch.Tensor:
         x = self.policy_network(states.to(torch.float32))
         if self.output_transform is not None:
             return self.output_transform(x)

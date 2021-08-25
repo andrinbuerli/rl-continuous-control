@@ -3,6 +3,8 @@ from typing import Callable
 import torch
 
 from lib.agent.BaseRLAgent import BaseRLAgent
+from lib.policy.DeterministicBasePolicy import DeterministicBasePolicy
+from lib.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.OrnsteinUhlenbeckProcess import OrnsteinUhlenbeckProcess
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
@@ -11,8 +13,8 @@ class DDPGRLAgent(BaseRLAgent):
 
     def __init__(
             self,
-            get_actor,
-            get_critic,
+            get_actor: Callable[[], DeterministicBasePolicy],
+            get_critic: Callable[[], StateActionValueFunction],
             state_size: int,
             action_size: int,
             seed: int = 0,
@@ -104,20 +106,16 @@ class DDPGRLAgent(BaseRLAgent):
         self.policy_gradients = None
         self.critic_loss = None
 
-    def act(self, states: np.ndarray, training: int = 1) -> (np.ndarray, np.ndarray):
+    def act(self, states: np.ndarray, training: int = 1, action_lower_bound=-1, action_upper_bound=1) -> (np.ndarray, np.ndarray):
         """
-        # Add random exploration noise
-        if random() > self.eps:
-            self.argmaxpolicy_local.eval()
-            with torch.no_grad():
-                actions = self.argmaxpolicy_local(states)
-            self.argmaxpolicy_local.train()
+        Determine next action based on current states
 
-            actions = actions.detach().cpu().numpy()
-            return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
-        else:
-            return np.random.uniform(-1, 1, (states.shape[0], self.action_size)),\
-                   np.zeros((states.shape[0], self.action_size)), np.zeros((states.shape[0]))
+        @param states: the current states
+        @param training: binary integer indicating weather or not noise is incorporated into the action
+        @param action_upper_bound: clip action upper bound
+        @param action_lower_bound: clip action lower bound
+        @return: the clipped actions, the action logits (zeros for this agent),
+                 the log_probabilities of the actions (zeros for this agent)
         """
 
         states = torch.from_numpy(states).float().to(self.device)
@@ -148,7 +146,7 @@ class DDPGRLAgent(BaseRLAgent):
                                                      rewards.reshape(states.shape[0] * states.shape[1], -1),
                                                      next_states.reshape(states.shape[0] * states.shape[1], -1)):
             if self.prioritized_exp_replay:
-                priority = np.abs(self.calculate_td_error(
+                priority = np.abs(self.__calculate_td_error(
                     torch.from_numpy(state).float().to(device),
                     torch.tensor(action).float().to(device),
                     torch.tensor(reward).float().to(device),
@@ -181,20 +179,27 @@ class DDPGRLAgent(BaseRLAgent):
     def reset(self):
         return self.random_process.reset_states()
 
+    def get_log_dict(self) -> dict:
+        return {
+            "epsilon": self.eps,
+            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
+            "actor_loss": self.policy_gradients.detach().cpu().numpy() if self.policy_gradients is not None else None,
+            "loss": self.loss.detach().cpu().numpy() if self.loss is not None else None,
+            "grad_actor":
+                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
+                if self.policy_gradients is not None else None,
+            "grad_critic":
+                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
+                if self.critic_loss is not None else None
+        }
+
     def __learn(self, experiences):
-        """Update value parameters using given batch of experience tuples.
-
-        Params
-        ======
-            experiences (Tuple[torch.Variable]): tuple of (s, a, r, s', done) tuples
-        """
-
         if self.prioritized_exp_replay:
             states, actions, rewards, next_states, indices, importance_sampling_weights = experiences
         else:
             states, actions, rewards, next_states = experiences
 
-        td_error = self.calculate_td_error(states, actions, rewards, next_states)
+        td_error = self.__calculate_td_error(states, actions, rewards, next_states)
 
         if self.prioritized_exp_replay:
             self.memory.update_priorities(indices, np.abs(td_error.cpu().detach().numpy()))
@@ -217,21 +222,10 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.loss = self.critic_loss + self.policy_gradients
 
-        # ------------------- update target network ------------------- #
-        self.soft_update(self.qnetwork_local, self.qnetwork_target)
-        self.soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
+        self.__soft_update(self.qnetwork_local, self.qnetwork_target)
+        self.__soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
 
-    def calculate_td_error(self, states, actions, rewards, next_states):
-        """Calculate temporal difference error
-
-        Params
-        ======
-            states (PyTorch float tensor): previous states
-            actions (PyTorch int tensor): executed actions
-            rewards (PyTorch float tensor): collected rewards
-            next_states (PyTorch float tensor): the next states
-        """
-
+    def __calculate_td_error(self, states, actions, rewards, next_states):
         next_best_actions = self.argmaxpolicy_target.forward(next_states)
         q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
 
@@ -241,28 +235,6 @@ class DDPGRLAgent(BaseRLAgent):
 
         return td_error
 
-    def soft_update(self, local_model, target_model):
-        """Soft update model parameters.
-        θ_target = τ*θ_local + (1 - τ)*θ_target
-
-        Params
-        ======
-            local_model (PyTorch model): weights will be copied from
-            target_model (PyTorch model): weights will be copied to
-        """
+    def __soft_update(self, local_model, target_model):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(self.tau * local_param.data + (1.0 - self.tau) * target_param.data)
-
-    def get_log_dict(self) -> dict:
-        return {
-            "epsilon": self.eps,
-            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
-            "actor_loss": self.policy_gradients.detach().cpu().numpy() if self.policy_gradients is not None else None,
-            "loss": self.loss.detach().cpu().numpy() if self.loss is not None else None,
-            "grad_actor":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
-                if self.policy_gradients is not None else None,
-            "grad_critic":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
-                if self.critic_loss is not None else None
-        }

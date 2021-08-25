@@ -6,40 +6,48 @@ import torch
 
 
 class ReplayBuffer:
-    """Fixed-size buffer to store experience tuples."""
 
-    def __init__(self, action_size, buffer_size, batch_size, seed, device="cpu"):
-        """Initialize a ReplayBuffer object.
+    def __init__(
+            self,
+            action_size: int,
+            buffer_size: int,
+            batch_size: int,
+            seed: int,
+            device: str = "cpu"):
+        """
+        Fixed-size buffer to store experience tuples.
 
-        Params
-        ======
-            action_size (int): dimension of each action
-            buffer_size (int): maximum size of buffer
-            batch_size (int): size of each training batch
-            seed (int): random seed
+        @param action_size: dimension of each action
+        @param buffer_size: maximum size of buffer
+        @param batch_size: size of each training batch
+        @param seed: random seed
+        @param device: device for calculations
         """
         self.device = device
         self.action_size = action_size
         self.memory = deque(maxlen=buffer_size)
         self.batch_size = batch_size
-        self.seed = random.seed(seed)
+        self.seed = seed
+        random.seed(seed)
 
-    def add(self, state, action, reward, next_state):
-        """Add a new experience to memory.
-
-        Params
-        ======
-            state (np.array float): previous state
-            action (int): executed action
-            reward (float): collected reward
-            next_state (np.array float): the next state
-            priority (float): priority of experience (e.g. absolute temporal difference)
+    def add(self, state: np.array, action: np.array, reward: float, next_state: np.array):
         """
-        e = Experience(state, action, reward, next_state)
+        Add a new experience to memory.
+
+        @param state: previous state
+        @param action: executed action
+        @param reward: collected reward
+        @param next_state: the next state
+        """
+        e = __Experience(state, action, reward, next_state)
         self.memory.append(e)
 
     def sample(self):
-        """Randomly sample a batch of experiences from memory."""
+        """
+        Randomly sample a batch of experiences from memory.
+
+        @return: (states, actions, rewards, next_states)
+        """
         experiences = random.sample(self.memory, k=self.batch_size)
 
         states = torch.from_numpy(np.vstack([e.state for e in experiences if e is not None])).float().to(self.device)
@@ -48,7 +56,7 @@ class ReplayBuffer:
         next_states = torch.from_numpy(np.vstack([e.next_state for e in experiences if e is not None])).float().to(
             self.device)
 
-        return (states, actions, rewards, next_states)
+        return states, actions, rewards, next_states
 
     def __len__(self):
         """Return the current size of internal memory."""
@@ -56,18 +64,26 @@ class ReplayBuffer:
 
 
 class PrioritizedReplayBuffer:
-    """Fixed-size buffer to store experience tuples."""
 
-    def __init__(self, action_size, buffer_size, batch_size, peps=1e-3, seed=0, device="cpu"):
-        """Initialize a ReplayBuffer object.
+    def __init__(
+            self,
+            action_size: int,
+            buffer_size: int,
+            batch_size: int,
+            peps: float = 1e-3,
+            seed: int = 0,
+            device: str = "cpu"):
+        """
+        Fixed-size buffer to store experience tuples.
 
-        Params
-        ======
-            action_size (int): dimension of each action
-            buffer_size (int): maximum size of buffer
-            batch_size (int): size of each training batch
-            peps (float): constant term added to priority
-            seed (int): random seed
+
+
+        @param action_size: dimension of each action
+        @param buffer_size: maximum size of buffer
+        @param batch_size: size of each training batch
+        @param peps: constant term added to priority
+        @param seed: random seed
+        @param device: device for calculations
         """
         self.device = device
         self.peps = peps
@@ -75,35 +91,37 @@ class PrioritizedReplayBuffer:
         self.memory = deque(maxlen=buffer_size)
         self.memory.clear()
         self.batch_size = batch_size
-        self.seed = random.seed(seed)
+        self.seed = seed
+        random.seed(seed)
 
-    def add(self, state, action, reward, next_state, priority):
-        """Add a new experience to memory.
-
-        Params
-        ======
-            state (np.array float): previous state
-            action (int): executed action
-            reward (float): collected reward
-            next_state (np.array float): the next state
-            priority (float): priority of experience (e.g. absolute temporal difference)
+    def add(self, state: np.array, action: np.array, reward: float, next_state: np.array, priority: float):
         """
-        e = Experience(state, action, reward, next_state, priority + self.peps)
+        Add a new experience to memory.
+
+        @param state: previous state
+        @param action: executed action
+        @param reward: collected reward
+        @param next_state: the next state
+        @param priority: priority of experience (e.g. absolute temporal difference)
+        """
+        e = __Experience(state, action, reward, next_state, priority + self.peps)
         self.memory.append(e)
 
     def update_priorities(self, indices, priorities):
-        """Update priorities in the memory at the given indices."""
+        """
+        Update priorities in the memory at the given indices.
+        """
         experiences = [self.memory.__getitem__(x) for x in indices]
         for i, exp in enumerate(experiences):
             exp.priority = float(priorities[i] + self.peps)
 
-    def sample(self, a=1, b=1):
-        """Sample a batch of experiences from memory according to the stored priorities.
+    def sample(self, a: float = 1, b: float = 1):
+        """
+        Sample a batch of experiences from memory according to the stored priorities.
 
-        Params
-        ======
-            a (float): a=1 greedy prioritized sampling, a=0 uniform sampling
-            b (float): b=1 fully accounted importance sampling weight, b=0 ignore importance sampling weight
+        @param a: a=1 greedy prioritized sampling, a=0 uniform sampling
+        @param b: b=1 fully accounted importance sampling weight, b=0 ignore importance sampling weight
+        @return: (states, actions, rewards, next_states)
         """
 
         priorities = np.array(list(map(lambda exp: exp.priority, self.memory)))
@@ -128,12 +146,14 @@ class PrioritizedReplayBuffer:
         return states, actions, rewards, next_states, indices, importance_sampling_weight
 
     def __len__(self):
-        """Return the current size of internal memory."""
+        """
+        Return the current size of internal memory.
+        """
         return len(self.memory)
 
 
-class Experience:
-    def __init__(self, state, action, reward, next_state, priority=None):
+class __Experience:
+    def __init__(self, state: np.array, action: np.array, reward: float, next_state: np.array, priority=None):
         self.priority = priority
         self.next_state = next_state
         self.next_state = next_state
