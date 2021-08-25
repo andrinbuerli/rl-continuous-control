@@ -9,9 +9,9 @@ In this project, an agent is trained to interact in two different environments w
 
 The first environment is called *Reacher*, here the task is to control a double-jointed arm such that it can move to target locations. A reward of +0.1 is provided for each step that the agent's hand is in the goal location. Thus, the goal of your agent is to maintain its position at the target location for as many time steps as possible.
 
-|        Initial (random) policy:         |               Learned policy:               |
-| :-------------------------------------: | :-----------------------------------------: |
-| <img src="imgs\initial_reacher.gif"  /> | <img src="imgs\trained_reacher.gif"  />TBD! |
+|                   Initial (random) policy:                   |                       Learned policy:                        |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+| <img src="imgs\initial_reacher.gif" style="height:200px;" /> | <img src="imgs\trained_reacher.gif"  style="height:200px;" /> |
 
 The observation space consists of 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm. Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1. The environment is considered solved if a mean reward of 35 is reached over 100 consecutive episodes.
 
@@ -41,10 +41,14 @@ The observation space consists of 172 variables corresponding to position, rotat
 4. Start the training with 
 
    ``` bash
-   # train agent in reacher environment
-   docker-compose up train_reacher_ppo_ac
-   # train agent in crawler environment
-   docker-compose up train_crawler_ppo_ac
+   # train a ppo agent in reacher environment
+   docker-compose up train_reacher_ppo
+   # train a ddpg agent in reacher environment
+   docker-compose up train_reacher_ddpg
+   # train a ppo agent in crawler environment
+   docker-compose up train_crawler_ppo
+   # train a ddpg agent in crawler environment
+   docker-compose up train_crawler_ddpg
    ```
 
 If you want to visually watch a trained agent interacting with the environment, you can download the required files at
