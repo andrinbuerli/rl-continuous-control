@@ -11,7 +11,7 @@ from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 from lib.function.StateValueFunction import StateValueFunction
-from lib.agent.ppo import PPO_ActorCriticRLAgent
+from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
 from lib.log.WandbLogger import WandbSweepLogger
 
 if __name__ == "__main__":
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     policy = StochasticContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size, seed=args.seed,
                                                 output_transform=lambda x: torch.tanh(x))
     value_function = StateValueFunction(state_size=env.state_size, seed=args.seed)
-    agent = PPO_ActorCriticRLAgent(
+    agent = PPOActorCriticRLAgent(
         actor=policy,
         critic=value_function,
         discount_rate=args.discount_rate,
