@@ -39,7 +39,7 @@ class ReplayBuffer:
         @param reward: collected reward
         @param next_state: the next state
         """
-        e = __Experience(state, action, reward, next_state)
+        e = _Experience(state, action, reward, next_state)
         self.memory.append(e)
 
     def sample(self):
@@ -104,7 +104,7 @@ class PrioritizedReplayBuffer:
         @param next_state: the next state
         @param priority: priority of experience (e.g. absolute temporal difference)
         """
-        e = __Experience(state, action, reward, next_state, priority + self.peps)
+        e = _Experience(state, action, reward, next_state, priority + self.peps)
         self.memory.append(e)
 
     def update_priorities(self, indices, priorities):
@@ -152,7 +152,7 @@ class PrioritizedReplayBuffer:
         return len(self.memory)
 
 
-class __Experience:
+class _Experience:
     def __init__(self, state: np.array, action: np.array, reward: float, next_state: np.array, priority=None):
         self.priority = priority
         self.next_state = next_state
