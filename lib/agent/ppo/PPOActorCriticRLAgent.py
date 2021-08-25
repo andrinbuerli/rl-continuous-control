@@ -6,7 +6,7 @@ from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 from lib.function.StateValueFunction import StateValueFunction
 
 
-class PPO_ActorCriticRLAgent(PPORLAgent):
+class PPOActorCriticRLAgent(PPORLAgent):
 
     def __init__(
             self,
@@ -41,7 +41,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
                            λ = 0 recovers temporal difference and λ=1 the monte carlo estimate
         @param device: the device on which the calculations are to be executed
         """
-        super(PPO_ActorCriticRLAgent, self).__init__(
+        super(PPOActorCriticRLAgent, self).__init__(
             policy=actor,
             discount_rate=discount_rate,
             epsilon=epsilon,
@@ -67,7 +67,7 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
         self.actor_loss = None
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
-        return super(PPO_ActorCriticRLAgent, self).act(states)
+        return super(PPOActorCriticRLAgent, self).act(states)
 
     def learn(
             self,
@@ -90,15 +90,9 @@ class PPO_ActorCriticRLAgent(PPORLAgent):
 
             estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
             estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
-            value_last_next_state = estimated_next_state_values[:, -1]
 
             self.critic_loss = self.critic_loss_coefficient * \
-                               (
-                                       (
-                                               (future_discounted_rewards) # + value_last_next_state.view(-1, 1))
-                                               - estimated_state_values
-                                       ) ** 2
-                               ).mean()
+                               ((future_discounted_rewards - estimated_state_values) ** 2).mean()
 
             advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
                                                                estimated_next_state_values=estimated_next_state_values,

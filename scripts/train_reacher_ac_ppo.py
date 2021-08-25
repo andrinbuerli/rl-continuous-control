@@ -10,7 +10,7 @@ from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 from lib.function.StateValueFunction import StateValueFunction
-from lib.agent.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
+from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
 from lib.log.WandbLogger import WandbLogger
 
 if __name__ == "__main__":
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     value_function = StateValueFunction(state_size=env.state_size, seed=args.seed)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    agent = PPO_ActorCriticRLAgent(
+    agent = PPOActorCriticRLAgent(
         actor=policy,
         critic=value_function,
         discount_rate=args.discount_rate,

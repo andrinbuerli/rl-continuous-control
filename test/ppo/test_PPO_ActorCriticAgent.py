@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from lib.agent.ppo.PPO_ActorCriticAgent import PPO_ActorCriticRLAgent
+from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
 from lib.function.StateValueFunction import StateValueFunction
 from test.ppo.MockPolicy import MockPolicy
 
@@ -15,7 +15,7 @@ def test_estimate_advantages_calculation():
 
     gamma = 0.9
     lambd = 0.9
-    testee = PPO_ActorCriticRLAgent(
+    testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
         actor=policy,
@@ -68,7 +68,7 @@ def test_estimate_advantages_calculation_recover_td():
 
     gamma = 0.9
     lambd = 0
-    testee = PPO_ActorCriticRLAgent(
+    testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
         actor=policy,
@@ -121,7 +121,7 @@ def test_estimate_advantages_calculation_recover_mc():
 
     gamma = 1
     lambd = 1
-    testee = PPO_ActorCriticRLAgent(
+    testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
         actor=policy,
