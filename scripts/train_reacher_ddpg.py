@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     env = ParallelAgentsUnityEnvironment(
         name="Reacher",
-        target_reward=35,
+        target_reward=45,
         env_binary_path='../environments/Reacher_Linux_NoVis/Reacher.x86_64')
 
     policy = lambda: ContinuousDeterministicPolicy(state_size=env.state_size, action_size=env.action_size,
