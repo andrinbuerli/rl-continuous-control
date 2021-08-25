@@ -29,7 +29,7 @@ if __name__ == "__main__":
             "update_every": 1,
             "learning_rate": 0.0001,
             "update_for": 10,
-            "n_iterations": 1e7,
+            "n_iterations": int(1e7),
             "max_t": 20,
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
