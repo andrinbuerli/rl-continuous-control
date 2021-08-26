@@ -20,7 +20,11 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
         self.output_transform = output_transform
 
         self.policy_network = nn.Sequential(
-            nn.Linear(state_size, 128),
+            nn.Linear(state_size, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
