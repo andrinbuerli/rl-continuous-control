@@ -21,10 +21,10 @@ if __name__ == "__main__":
         config_objects={
             "discount_rate": 0.99,
             "epsilon": 0.1,
-            "epsilon_decay": 0.99995,
+            "epsilon_decay": 0.9995,
             "beta": 0.1,
-            "beta_deay": 0.99995,
-            "learning_rate": 0.0005,
+            "beta_deay": 0.9995,
+            "learning_rate": 0.001,
             "SGD_epoch": 4,
             "n_iterations": int(1e7),
             "max_t": 2048,
@@ -40,9 +40,10 @@ if __name__ == "__main__":
         target_reward=3000,
         env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
-    policy = StochasticContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
-                                                seed=args.seed, output_transform=lambda x: torch.tanh(x))
-    value_function = StateValueFunction(state_size=env.state_size, seed=args.seed)
+    policy = StochasticContinuousGaussianPolicy(
+        state_size=env.state_size, action_size=env.action_size,
+        seed=args.seed, output_transform=lambda x: torch.tanh(x), reduced_capacity=False)
+    value_function = StateValueFunction(state_size=env.state_size, seed=args.seed, reduced_capacity=False)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     agent = PPOActorCriticRLAgent(

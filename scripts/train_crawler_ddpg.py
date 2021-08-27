@@ -27,7 +27,7 @@ if __name__ == "__main__":
             "batch_size": 128,
             "tau": 1e-3,
             "update_every": 1,
-            "learning_rate": 0.0001,
+            "learning_rate": 0.001,
             "update_for": 10,
             "n_iterations": int(1e7),
             "max_t": 20,
@@ -42,10 +42,12 @@ if __name__ == "__main__":
         target_reward=3000,
         env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
-    policy = lambda: DeterministicContinuousGaussianPolicy(state_size=env.state_size, action_size=env.action_size,
-                                                           seed=args.seed, output_transform=lambda x: torch.tanh(x))
-    value_function = lambda: StateActionValueFunction(state_size=env.state_size, action_size=env.action_size,
-                                                      seed=args.seed)
+    policy = lambda: DeterministicContinuousGaussianPolicy(
+        state_size=env.state_size, action_size=env.action_size,
+        seed=args.seed, output_transform=lambda x: torch.tanh(x), reduced_capacity=False)
+    value_function = lambda: StateActionValueFunction(
+        state_size=env.state_size, action_size=env.action_size,
+        seed=args.seed, reduced_capacity=False)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     agent = DDPGRLAgent(
@@ -85,7 +87,8 @@ if __name__ == "__main__":
         config=config) if bool(args.enable_log) else None
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
-    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration, intercept=True)
+    trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration,
+                  intercept=True)
 
     env.dispose()
     logger.dispose()
