@@ -24,13 +24,13 @@ if __name__ == "__main__":
             "epsilon_decay": 0.99995,
             "beta": 0.1,
             "beta_deay": 0.99995,
-            "learning_rate": 0.0005,
+            "learning_rate": 0.00005,
             "SGD_epoch": 4,
             "n_iterations": int(1e7),
             "max_t": 2048,
             "gae_lambda": 0.8,
             "enable_log": 1,
-            "critic_loss_coefficient": 1,
+            "critic_loss_coefficient": 2,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
         })
