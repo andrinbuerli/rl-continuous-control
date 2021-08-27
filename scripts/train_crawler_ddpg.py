@@ -19,15 +19,15 @@ if __name__ == "__main__":
     args = parse_config_for(
         program_name='Crawler PPO Actor Critic style RL agent trainer',
         config_objects={
-            "gamma": 0.95,
+            "gamma": 0.99,
             "epsilon": 1,
             "epsilon_decay": .999995,
             "epsilon_min": 0.01,
             "buffer_size": int(1e6),
-            "batch_size": 1024,
+            "batch_size": 128,
             "tau": 1e-3,
             "update_every": 1,
-            "learning_rate": 0.0005,
+            "learning_rate": 0.0001,
             "update_for": 10,
             "n_iterations": int(1e7),
             "max_t": 20,
