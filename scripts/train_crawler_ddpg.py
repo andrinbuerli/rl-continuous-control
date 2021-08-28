@@ -30,7 +30,7 @@ if __name__ == "__main__":
             "learning_rate": 0.0005,
             "update_for": 5,
             "n_iterations": int(1e7),
-            "max_t": 20,
+            "max_t": 60,
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
