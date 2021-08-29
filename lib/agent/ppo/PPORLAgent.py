@@ -53,7 +53,8 @@ class PPORLAgent(BaseRLAgent):
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         actions, action_logits, dist = self.policy(states)
-        return actions.detach().cpu().numpy(), action_logits.detach().cpu().numpy(), dist.log_prob(action_logits).detach().cpu().numpy()
+        return actions.detach().cpu().numpy(), action_logits.detach().cpu().numpy(), dist.log_prob(
+            action_logits).detach().cpu().numpy()
 
     def learn(
             self,
@@ -72,8 +73,11 @@ class PPORLAgent(BaseRLAgent):
         rewards = self.get_discounted_future_rewards(rewards)
 
         for _ in range(self.SGD_epoch):
-            loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
-                                                    action_logits=action_logits, future_discounted_rewards=rewards)
+            loss = -self.clipped_surrogate_function(
+                old_log_probs=action_log_probs.reshape(-1), states=states.reshape(-1, states.shape[-1]),
+                action_logits=action_logits.reshape(-1, action_logits.shape[-1]),
+                future_discounted_rewards=rewards.reshape(-1))
+
             self.policy_optimizer.zero_grad()
             loss.backward()
             self.policy_optimizer.step()
@@ -103,15 +107,12 @@ class PPORLAgent(BaseRLAgent):
         @param future_discounted_rewards: rewards of original trajectories [trajectories, time steps]
         @return: differentiable clipped surrogate loss scalar
         """
-
-        shape = states.shape
-        dist = self.policy.get_action_distribution(states.reshape(-1, shape[-1]))
-        new_log_probs, entropy = dist.log_prob(action_logits.reshape(-1, action_logits.shape[-1])), dist.entropy()
-        new_log_probs, entropy = new_log_probs.view(shape[0], shape[1]), entropy.view(shape[0], shape[1])
+        dist = self.policy.get_action_distribution(states)
+        new_log_probs, entropy = dist.log_prob(action_logits), dist.entropy()
 
         if future_discounted_rewards.shape[0] > 1:
-            mean = future_discounted_rewards.mean(dim=0).view(1, -1)
-            std = (future_discounted_rewards.std(dim=0) + 1.e-10).view(1, -1)
+            mean = future_discounted_rewards.mean()
+            std = future_discounted_rewards.std() + 1.e-10
 
             rewards_normalized = (future_discounted_rewards - mean) / std
         else:

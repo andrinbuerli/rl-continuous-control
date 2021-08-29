@@ -19,8 +19,10 @@ class PPOActorCriticRLAgent(PPORLAgent):
             beta_decay: float = .995,
             learning_rate: float = 1e-3,
             SGD_epoch: int = 4,
+            batch_size: int = 32,
             gae_lambda: float = 0.95,
             critic_loss_coefficient: float = 0.5,
+            grad_clip_max: float = 1.0,
             device="cpu",
     ):
         """
@@ -52,6 +54,8 @@ class PPOActorCriticRLAgent(PPORLAgent):
             SGD_epoch=SGD_epoch,
             device=device)
 
+        self.grad_clip_max = grad_clip_max
+        self.batch_size = batch_size
         self.critic_loss_coefficient = critic_loss_coefficient
         self.gae_lambda = gae_lambda
         self.actor = self.policy
@@ -65,6 +69,8 @@ class PPOActorCriticRLAgent(PPORLAgent):
         self.loss = None
         self.critic_loss = None
         self.actor_loss = None
+
+        self.buffer = None
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
         return super(PPOActorCriticRLAgent, self).act(states)
@@ -85,29 +91,52 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
         future_discounted_rewards = self.get_discounted_future_rewards(rewards)
 
+        shape = states.shape
+        estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1]).detach()
+        estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1]).detach()
+        advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
+                                                           estimated_next_state_values=estimated_next_state_values,
+                                                           rewards=rewards)
+
+        new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
+                       action_log_probs.reshape(-1), future_discounted_rewards.reshape(-1), advantage.reshape(-1)]
+        if self.buffer is None:
+            self.buffer = new_samples
+        else:
+            self.buffer = [torch.cat((x, y), dim=0) for x, y in zip(self.buffer, new_samples)]
+
+        buffer_length = self.buffer[0].shape[0]
+        if buffer_length < self.batch_size * self.SGD_epoch / 2:
+            return
+
+        states, action_logits, action_log_probs, future_discounted_rewards, advantage = self.buffer
+
         for _ in range(self.SGD_epoch):
-            shape = states.shape
+            minibatch_idx = torch.randperm(buffer_length)[:self.batch_size]
 
-            estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1])
-            estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1])
+            batch_states = states[minibatch_idx]
+            batch_action_logits = action_logits[minibatch_idx]
+            batch_action_log_probs = action_log_probs[minibatch_idx]
+            batch_future_discounted_rewards = future_discounted_rewards[minibatch_idx]
+            batch_advantage = advantage[minibatch_idx]
 
+            batch_estimated_state_values = self.critic(states[minibatch_idx])
             self.critic_loss = self.critic_loss_coefficient * \
-                               ((future_discounted_rewards - estimated_state_values) ** 2).mean()
+                               ((batch_future_discounted_rewards - batch_estimated_state_values) ** 2).mean()
 
-            advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
-                                                               estimated_next_state_values=estimated_next_state_values,
-                                                               rewards=rewards)
-
-            self.actor_loss = -self.clipped_surrogate_function(old_log_probs=action_log_probs, states=states,
-                                                               action_logits=action_logits,
-                                                               future_discounted_rewards=advantage)
+            self.actor_loss = -self.clipped_surrogate_function(old_log_probs=batch_action_log_probs,
+                                                               states=batch_states,
+                                                               action_logits=batch_action_logits,
+                                                               future_discounted_rewards=batch_advantage)
 
             self.actor_optimizer.zero_grad()
             self.actor_loss.backward(retain_graph=True)
+            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.grad_clip_max)
             self.actor_optimizer.step()
 
             self.critic_optimizer.zero_grad()
             self.critic_loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.grad_clip_max)
             self.critic_optimizer.step()
 
             self.loss = self.actor_loss + self.critic_loss
@@ -118,6 +147,8 @@ class PPOActorCriticRLAgent(PPORLAgent):
         # the regulation term also reduces
         # this reduces exploration in later runs
         self.beta *= self.beta_deay
+
+        self.buffer = None
 
     def generalized_advantages_estimation(self, estimated_state_values, estimated_next_state_values, rewards):
         """
