@@ -32,6 +32,7 @@ class DDPGRLAgent(BaseRLAgent):
             epsilon: float = 1.0,
             epsilon_decay: float = .9,
             epsilon_min: float = .01,
+            grad_clip_max: float = 1.0,
             device="cpu"
     ):
         """
@@ -59,6 +60,7 @@ class DDPGRLAgent(BaseRLAgent):
         @param epsilon_min:
         @param device: the device on which the calculations are to be executed
         """
+        self.grad_clip_max = grad_clip_max
         self.epsilon_min = epsilon_min
         self.update_for = update_for
         self.eps = epsilon
@@ -217,6 +219,7 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.qnetwork_optimizer.zero_grad()
         self.critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.qnetwork_local.parameters(), self.grad_clip_max)
         self.qnetwork_optimizer.step()
 
         actions = self.argmaxpolicy_local(states)
@@ -224,6 +227,7 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.argmaxpolicy_optimizer.zero_grad()
         self.policy_gradients.backward()
+        torch.nn.utils.clip_grad_norm_(self.argmaxpolicy_local.parameters(), self.grad_clip_max)
         self.argmaxpolicy_optimizer.step()
 
         self.loss = self.critic_loss + self.policy_gradients
