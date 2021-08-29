@@ -71,6 +71,7 @@ if __name__ == "__main__":
 
     if args.agent_weights is not None:
         agent.load(args.agent_weights)
+        print(f"loaded agent weights from : {args.agent_weights}")
 
     if device != "cpu":
         torch.cuda.set_device(0)
