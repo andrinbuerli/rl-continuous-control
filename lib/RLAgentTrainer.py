@@ -138,6 +138,10 @@ class RLAgentTrainer:
                 else:
                     break
 
+            if np.isnan(rewards).any():
+                print("!!!!! WARNING NAN rewards detected, penalizing agent with -5.0 !!!!!")
+                rewards[np.isnan(rewards)] = -5.0  # NAN penalty
+
             s_t0.append(self.states), a_t0.append(actions), al_t0.append(action_logits), pa_t0.append(log_probs)
             r_t1.append(rewards), s_t1.append(next_states)
 
@@ -155,10 +159,6 @@ class RLAgentTrainer:
 
     def __log_and_metrics(self, t_sampled):
         mean_score = self.trajectory_scores.mean()
-        if np.isnan(mean_score):
-            print("!!!!! WARNING mean_score is NAN !!!!!")
-            print(self.trajectory_scores)
-            mean_score = self.scores_window[-1]
         self.scores_window.append(mean_score)  # save most recent score
         self.scores.append(mean_score)  # save most recent score
         if self.logger is not None:
