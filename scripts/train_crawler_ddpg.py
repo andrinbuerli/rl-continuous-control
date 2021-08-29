@@ -23,7 +23,7 @@ if __name__ == "__main__":
             "epsilon": 1,
             "epsilon_decay": .999995,
             "epsilon_min": 0.01,
-            "buffer_size": int(1e5),
+            "buffer_size": int(1e6),
             "batch_size": 1024,
             "tau": 1e-3,
             "update_every": 1,
