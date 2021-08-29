@@ -21,7 +21,7 @@ if __name__ == "__main__":
         config_objects={
             "gamma": 0.99,
             "epsilon": 1,
-            "epsilon_decay": .99995,
+            "epsilon_decay": .9995,
             "epsilon_min": 0.01,
             "buffer_size": int(1e5),
             "batch_size": 128,
