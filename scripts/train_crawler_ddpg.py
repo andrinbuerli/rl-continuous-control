@@ -34,7 +34,8 @@ if __name__ == "__main__":
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
-            "seed": int(np.random.randint(0, 1e10, 1)[0])
+            "seed": int(np.random.randint(0, 1e10, 1)[0]),
+            "agent_weights": "agents/Crawler-DDPG_60753-227872720-99.11"
         })
 
     env = ParallelAgentsUnityEnvironment(
@@ -67,6 +68,9 @@ if __name__ == "__main__":
         device=device,
         action_size=env.action_size,
         state_size=env.state_size)
+
+    if args.agent_weights is not None:
+        agent.load(args.agent_weights)
 
     if device != "cpu":
         torch.cuda.set_device(0)
