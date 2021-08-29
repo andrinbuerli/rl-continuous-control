@@ -35,7 +35,7 @@ if __name__ == "__main__":
             "enable_log": 1,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0]),
-            "agent_weights": "agents/Crawler-DDPG_60753-227872720-99.11"
+            "agent_weights": ""
         })
 
     env = ParallelAgentsUnityEnvironment(
