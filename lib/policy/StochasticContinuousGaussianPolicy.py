@@ -45,12 +45,11 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
             )
 
         self.mu_head = nn.Linear(64, action_size)
-        self.act = nn.Tanh()
         self.logvar = nn.Parameter(torch.zeros(action_size))
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
         x = self.policy_network(states.to(torch.float32))
-        mu = self.act(self.mu_head(x))
+        mu = self.mu_head(x)
         # sigma must not be smaller than 0, so we interpret the output as ln(sigma)
         var = torch.exp(self.logvar)
         cov_matrix = torch.diag_embed(var)

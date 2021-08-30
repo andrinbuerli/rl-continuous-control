@@ -67,7 +67,8 @@ if __name__ == "__main__":
         prioritized_exp_replay=False,
         device=device,
         action_size=env.action_size,
-        state_size=env.state_size)
+        state_size=env.state_size,
+        grad_clip_max=1000)
 
     if args.agent_weights is not None:
         agent.load(args.agent_weights)
