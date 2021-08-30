@@ -26,7 +26,7 @@ if __name__ == "__main__":
             "beta_deay": 1,
             "learning_rate": 0.0001,
             "batch_size": 1024,
-            "SGD_epoch": 8,
+            "SGD_epoch": 32,
             "n_iterations": int(1e7),
             "max_t": 512,
             "gae_lambda": 0.99,
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     policy = StochasticContinuousGaussianPolicy(
         state_size=env.state_size, action_size=env.action_size,
-        seed=args.seed, output_transform=lambda x: torch.tanh(x), reduced_capacity=False)
+        seed=args.seed, reduced_capacity=False)
     value_function = StateValueFunction(state_size=env.state_size, seed=args.seed, reduced_capacity=False)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         gae_lambda=args.gae_lambda,
         critic_loss_coefficient=args.critic_loss_coefficient,
         device=device,
-        grad_clip_max=1000)
+        grad_clip_max=None)
 
     if device != "cpu":
         torch.cuda.set_device(0)
