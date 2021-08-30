@@ -26,17 +26,23 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
                 nn.ReLU(),
                 nn.Linear(128, 64),
                 nn.ReLU(),
+                nn.Tanh()
             )
         else:
             self.policy_network = nn.Sequential(
                 nn.Linear(state_size, 512),
+                nn.BatchNorm1d(512),
                 nn.ReLU(),
                 nn.Linear(512, 256),
+                nn.BatchNorm1d(256),
                 nn.ReLU(),
                 nn.Linear(256, 128),
+                nn.BatchNorm1d(128),
                 nn.ReLU(),
                 nn.Linear(128, 64),
+                nn.BatchNorm1d(64),
                 nn.ReLU(),
+                nn.Tanh()
             )
 
         self.mu_head = nn.Linear(64, action_size)
