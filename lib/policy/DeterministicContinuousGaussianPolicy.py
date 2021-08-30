@@ -36,13 +36,7 @@ class DeterministicContinuousGaussianPolicy(DeterministicBasePolicy):
                 nn.Linear(512, 256),
                 nn.BatchNorm1d(256),
                 nn.ReLU(),
-                nn.Linear(256, 128),
-                nn.BatchNorm1d(128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.BatchNorm1d(64),
-                nn.ReLU(),
-                nn.Linear(64, self.action_size)
+                nn.Linear(256, self.action_size)
             )
 
     def forward(self, states: torch.Tensor) -> torch.Tensor:

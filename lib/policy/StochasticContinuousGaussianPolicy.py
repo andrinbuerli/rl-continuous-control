@@ -37,15 +37,9 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
                 nn.Linear(512, 256),
                 nn.BatchNorm1d(256),
                 nn.ReLU(),
-                nn.Linear(256, 128),
-                nn.BatchNorm1d(128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.BatchNorm1d(64),
-                nn.ReLU(),
             )
 
-        self.mu_head = nn.Linear(64, action_size)
+        self.mu_head = nn.Linear(256, action_size)
         self.variance = nn.Parameter(torch.ones(action_size)*0.15)
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:

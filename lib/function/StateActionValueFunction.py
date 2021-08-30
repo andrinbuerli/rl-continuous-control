@@ -31,13 +31,7 @@ class StateActionValueFunction(nn.Module):
                 nn.Linear(512, 256),
                 nn.BatchNorm1d(256),
                 nn.ReLU(),
-                nn.Linear(256, 128),
-                nn.BatchNorm1d(128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.BatchNorm1d(64),
-                nn.ReLU(),
-                nn.Linear(64, 1)
+                nn.Linear(256, 1)
             )
 
     def forward(self, states: torch.Tensor, actions: torch.Tensor) -> torch.Tensor:
