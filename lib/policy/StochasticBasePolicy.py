@@ -36,7 +36,7 @@ class StochasticBasePolicy(nn.Module):
         dist = self.get_action_distribution(states)
         action_logits = dist.sample()
 
-        actions = torch.clip(action_logits, -1, 1)
+        actions = torch.clamp(action_logits, -1, 1)
 
         # if self.output_transform is not None:
         #     actions = self.output_transform(action_logits)
