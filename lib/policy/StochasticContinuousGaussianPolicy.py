@@ -1,6 +1,7 @@
 from typing import Callable
 import torch
 import torch.nn as nn
+from torch.functional import F
 
 from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
@@ -23,10 +24,11 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
         if reduced_capacity:
             self.policy_network = nn.Sequential(
                 nn.Linear(state_size, 128),
+                nn.BatchNorm1d(128),
                 nn.ReLU(),
                 nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Tanh()
+                nn.BatchNorm1d(64),
+                nn.ReLU()
             )
         else:
             self.policy_network = nn.Sequential(
@@ -45,14 +47,13 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
             )
 
         self.mu_head = nn.Linear(64, action_size)
-        self.logvar = nn.Parameter(torch.zeros(action_size))
+        self.variance = nn.Parameter(torch.ones(action_size)*0.15)
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
         x = self.policy_network(states.to(torch.float32))
-        mu = self.mu_head(x)
-        # sigma must not be smaller than 0, so we interpret the output as ln(sigma)
-        var = torch.exp(self.logvar)
-        cov_matrix = torch.diag_embed(var)
-        cov_matrix += torch.eye(self.action_size).type_as(cov_matrix) * 1e-6  # numerical stability
+        mu = F.tanh(self.mu_head(x))
+        # we restrict sigma to range -1, 1 as well
+        variance = F.tanh(self.variance)
+        cov_matrix = torch.diag_embed(variance)
         dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=cov_matrix)
         return dist
