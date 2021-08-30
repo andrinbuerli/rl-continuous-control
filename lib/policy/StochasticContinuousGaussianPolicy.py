@@ -1,7 +1,6 @@
 from typing import Callable
 import torch
 import torch.nn as nn
-from torch.functional import F
 
 from lib.policy.StochasticBasePolicy import StochasticBasePolicy
 
@@ -51,9 +50,9 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
         x = self.policy_network(states.to(torch.float32))
-        mu = F.tanh(self.mu_head(x))
+        mu = torch.tanh(self.mu_head(x))
         # we restrict sigma to range -1, 1 as well
-        variance = F.tanh(self.variance)
+        variance = torch.tanh(self.variance)
         cov_matrix = torch.diag_embed(variance)
         dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=cov_matrix)
         return dist
