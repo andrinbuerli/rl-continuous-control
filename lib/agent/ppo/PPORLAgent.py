@@ -53,8 +53,8 @@ class PPORLAgent(BaseRLAgent):
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         actions, action_logits, dist = self.policy(states)
-        return actions.detach().cpu().numpy(), action_logits.detach().cpu().numpy(), dist.log_prob(
-            action_logits).detach().cpu().numpy()
+        return np.clip(actions.detach().cpu().numpy(), -1, 1), action_logits.detach().cpu().numpy(),\
+               dist.log_prob(action_logits).detach().cpu().numpy()
 
     def learn(
             self,

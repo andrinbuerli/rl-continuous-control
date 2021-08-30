@@ -22,7 +22,7 @@ class PPOActorCriticRLAgent(PPORLAgent):
             batch_size: int = 32,
             gae_lambda: float = 0.95,
             critic_loss_coefficient: float = 0.5,
-            grad_clip_max: float = 1.0,
+            grad_clip_max: float = None,
             device="cpu",
     ):
         """
@@ -106,21 +106,22 @@ class PPOActorCriticRLAgent(PPORLAgent):
             self.buffer = [torch.cat((x, y), dim=0) for x, y in zip(self.buffer, new_samples)]
 
         buffer_length = self.buffer[0].shape[0]
-        if buffer_length < self.batch_size * self.SGD_epoch / 2:
+        if buffer_length < self.batch_size * self.SGD_epoch:
             return
 
         states, action_logits, action_log_probs, future_discounted_rewards, advantage = self.buffer
 
-        for _ in range(self.SGD_epoch):
-            minibatch_idx = torch.randperm(buffer_length)[:self.batch_size]
+        indices = torch.randperm(buffer_length)
+        batches = [indices[i*self.batch_size:(i+1)*self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
 
+        for minibatch_idx in batches:
             batch_states = states[minibatch_idx]
             batch_action_logits = action_logits[minibatch_idx]
             batch_action_log_probs = action_log_probs[minibatch_idx]
             batch_future_discounted_rewards = future_discounted_rewards[minibatch_idx]
             batch_advantage = advantage[minibatch_idx]
 
-            batch_estimated_state_values = self.critic(states[minibatch_idx])
+            batch_estimated_state_values = self.critic(states[minibatch_idx]).reshape(-1)
             self.critic_loss = self.critic_loss_coefficient * \
                                ((batch_future_discounted_rewards - batch_estimated_state_values) ** 2).mean()
 
@@ -131,12 +132,14 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
             self.actor_optimizer.zero_grad()
             self.actor_loss.backward(retain_graph=True)
-            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.grad_clip_max)
+            if self.grad_clip_max is not None:
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.grad_clip_max)
             self.actor_optimizer.step()
 
             self.critic_optimizer.zero_grad()
             self.critic_loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.grad_clip_max)
+            if self.grad_clip_max is not None:
+                torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.grad_clip_max)
             self.critic_optimizer.step()
 
             self.loss = self.actor_loss + self.critic_loss
@@ -176,7 +179,7 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
     def get_log_dict(self) -> dict:
         return {
-            "logvar_mean": self.actor.logvar.detach().cpu().numpy().mean(),
+            "var_mean": self.actor.variance.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
             "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
