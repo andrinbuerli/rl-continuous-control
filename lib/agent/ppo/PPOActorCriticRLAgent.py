@@ -1,13 +1,13 @@
 import numpy as np
 import torch
 
-from lib.agent.ppo.PPORLAgent import PPORLAgent
+from lib.agent.BaseRLAgent import BaseRLAgent
 from lib.models.policy.StochasticBasePolicy import StochasticBasePolicy
 from lib.models.function import StateValueFunction
 from lib.models.PPOActorCriticJointModel import PPOActorCriticJointModel
 
 
-class PPOActorCriticRLAgent(PPORLAgent):
+class PPOActorCriticRLAgent(BaseRLAgent):
 
     def __init__(
             self,
@@ -43,26 +43,27 @@ class PPOActorCriticRLAgent(PPORLAgent):
                            λ = 0 recovers temporal difference and λ=1 the monte carlo estimate
         @param device: the device on which the calculations are to be executed
         """
+
+        self.beta_deay = beta_decay
+        self.epsilon_decay = epsilon_decay
+        self.model = model.to(device)
+        self.SGD_epoch = SGD_epoch
+        self.beta = beta
+        self.epsilon = epsilon
+        self.discount_rate = discount_rate
+
         super(PPOActorCriticRLAgent, self).__init__(
-            policy=model,
-            discount_rate=discount_rate,
-            epsilon=epsilon,
-            epsilon_decay=epsilon_decay,
-            beta=beta,
-            beta_decay=beta_decay,
+            models=[self.model],
+            device=device,
             learning_rate=learning_rate,
-            SGD_epoch=SGD_epoch,
-            device=device)
+            model_names=["actor_critic"])
+
+        self.model_optimizer = self._get_optimizer(self.model.parameters())
 
         self.grad_clip_max = grad_clip_max
         self.batch_size = batch_size
         self.critic_loss_coefficient = critic_loss_coefficient
         self.gae_lambda = gae_lambda
-
-        self.model = model
-        self.model_optimizer = self.policy_optimizer
-        self.model_names = [self.model]
-        self.model_names = ["actor_critic"]
 
         self.loss = None
         self.critic_loss = None
@@ -70,8 +71,11 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
         self.buffer = None
 
-    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
-        return super(PPOActorCriticRLAgent, self).act(states)
+    def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
+        states = torch.tensor(states, dtype=torch.float32).to(self.device)
+        pred = self.model(states)
+        return np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), pred["actions"].detach().cpu().numpy(), \
+               pred["dist"].log_prob(pred["actions"]).detach().cpu().numpy()
 
     def learn(
             self,
@@ -87,17 +91,15 @@ class PPOActorCriticRLAgent(PPORLAgent):
         rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
         action_log_probs = torch.tensor(action_log_probs, dtype=torch.float32).to(self.device)
 
-        future_discounted_rewards = self.get_discounted_future_rewards(rewards)
-
         shape = states.shape
         estimated_state_values = self.model(states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
         estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
-        advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
+        advantage, value_target = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
                                                            estimated_next_state_values=estimated_next_state_values,
                                                            rewards=rewards)
 
         new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
-                       action_log_probs.reshape(-1), future_discounted_rewards.reshape(-1), advantage.reshape(-1)]
+                       action_log_probs.reshape(-1), value_target.reshape(-1), advantage.reshape(-1)]
         if self.buffer is None:
             self.buffer = new_samples
         else:
@@ -107,7 +109,7 @@ class PPOActorCriticRLAgent(PPORLAgent):
         if buffer_length < self.batch_size * self.SGD_epoch:
             return
 
-        states, action_logits, action_log_probs, future_discounted_rewards, advantage = self.buffer
+        states, action_logits, action_log_probs, value_target, advantage = self.buffer
 
         advantage = (advantage - advantage.mean()) / advantage.std()
 
@@ -122,13 +124,13 @@ class PPOActorCriticRLAgent(PPORLAgent):
             batch_states = states[minibatch_idx]
             batch_action_logits = action_logits[minibatch_idx]
             batch_action_log_probs = action_log_probs[minibatch_idx]
-            batch_future_discounted_rewards = future_discounted_rewards[minibatch_idx]
+            batch_value_target = value_target[minibatch_idx]
             batch_advantage = advantage[minibatch_idx]
 
             pred = self.model(batch_states)
             batch_estimated_state_values = pred["v"].reshape(-1)
             critic_loss = self.critic_loss_coefficient * \
-                               ((batch_future_discounted_rewards - batch_estimated_state_values) ** 2).mean()
+                               ((batch_value_target - batch_estimated_state_values) ** 2).mean()
 
             new_log_probs, entropy = pred["dist"].log_prob(batch_action_logits), pred["dist"].entropy()
 
@@ -183,7 +185,25 @@ class PPOActorCriticRLAgent(PPORLAgent):
             coefficients = ((self.gae_lambda * self.discount_rate) ** torch.arange(0, T - t, 1)).to(self.device)
             advantage_estimation[:, t] = (temporal_differences[:, t:] * coefficients).sum(dim=1)
 
-        return advantage_estimation
+        value_target = advantage_estimation + estimated_state_values
+
+        return advantage_estimation, value_target
+
+    def get_discounted_future_rewards(self, rewards):
+        """
+        Calculate the discounted future rewards for each time step in each trajectory
+
+        @param rewards: the raw received rewards [trajectories, time steps]
+        @return: the discounted future rewards [trajectories, time steps]
+        """
+
+        T = rewards.shape[1]
+        discounted_future_rewards = torch.empty_like(rewards)
+        for t in range(T):
+            coefficients = ((self.discount_rate) ** torch.arange(0, T - t, 1)).to(self.device)
+            discounted_future_rewards[:, t] = (rewards[:, t:] * coefficients).sum(dim=1)
+
+        return discounted_future_rewards
 
     def get_name(self) -> str:
         return "PPO_ActorCritic"
