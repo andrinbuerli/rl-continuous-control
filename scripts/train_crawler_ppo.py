@@ -32,7 +32,7 @@ if __name__ == "__main__":
             "max_t": 512,
             "gae_lambda": 0.99,
             "enable_log": 1,
-            "critic_loss_coefficient": 2,
+            "critic_loss_coefficient": .5,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
         })
