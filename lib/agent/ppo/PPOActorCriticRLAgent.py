@@ -139,7 +139,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             batch_value_target = value_target[minibatch_idx]
             batch_advantage = advantage[minibatch_idx].view(-1, 1)
 
-            pred = self.model(batch_states)
+            pred = self.model(batch_states, scale=self.std_scale)
             batch_estimated_state_values = pred["v"].reshape(-1)
             critic_loss = self.critic_loss_coefficient * \
                           ((batch_value_target - batch_estimated_state_values) ** 2).mean()

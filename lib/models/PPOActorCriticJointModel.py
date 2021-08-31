@@ -33,7 +33,7 @@ class PPOActorCriticJointModel(nn.Module):
         self.mu_head = nn.Linear(256, action_size)
         self.std = nn.Parameter(torch.ones(1, action_size)*0.15)
 
-    def forward(self, states: torch.Tensor, scale: torch.float32 = 1.0):
+    def forward(self, states: torch.Tensor, scale: torch.float32):
         x = self.feature_extractor(states.to(torch.float32))
         mu = torch.tanh(self.mu_head(x))
         v = self.v_head(x)
