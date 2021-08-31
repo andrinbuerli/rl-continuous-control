@@ -20,7 +20,7 @@ class PPOActorCriticJointModel(nn.Module):
         self.feature_extractor = nn.Sequential(
             nn.BatchNorm1d(state_size),
             nn.Linear(state_size, 512),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.BatchNorm1d(512),
             nn.Linear(512, 256),
             nn.BatchNorm1d(256),
@@ -35,7 +35,7 @@ class PPOActorCriticJointModel(nn.Module):
     def forward(self, states: torch.Tensor):
         x = self.feature_extractor(states.to(torch.float32))
         mu = torch.tanh(self.mu_head(x))
-        v = torch.relu(self.v_head(x))
+        v = self.v_head(x)
         # we restrict variance to range (0, 1)
         variance = torch.sigmoid(self.variance)
         cov_matrix = torch.diag_embed(variance)
