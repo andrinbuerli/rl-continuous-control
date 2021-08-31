@@ -23,6 +23,8 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             gae_lambda: float = 0.95,
             critic_loss_coefficient: float = 0.5,
             grad_clip_max: float = None,
+            std_scale: float = 1.0,
+            std_scale_decay: float = 0.99,
             device="cpu",
     ):
         """
@@ -44,6 +46,8 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         @param device: the device on which the calculations are to be executed
         """
 
+        self.std_scale = std_scale
+        self.std_scale_decay = std_scale_decay
         self.beta_deay = beta_decay
         self.epsilon_decay = epsilon_decay
         self.model = model.to(device)
@@ -73,12 +77,14 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
-        pred = self.model(states)
+        pred = self.model(states, scale=self.std_scale)
         log_probs = pred["dist"].log_prob(pred["actions"]) \
             .sum(dim=1) \
             .detach().cpu().numpy()
-        return np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), pred["actions"].detach().cpu().numpy(), \
-               log_probs
+        return\
+            np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), \
+            pred["actions"].detach().cpu().numpy(), \
+            log_probs
 
     def learn(
             self,
@@ -95,9 +101,10 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         action_log_probs = torch.tensor(action_log_probs, dtype=torch.float32).to(self.device)
 
         shape = states.shape
-        estimated_state_values = self.model(states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
-        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]))["v"].view(shape[0],
-                                                                                               shape[1]).detach()
+        estimated_state_values = self.model(states.reshape(-1, shape[-1]), scale=self.std_scale)["v"]\
+            .view(shape[0], shape[1]).detach()
+        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]), scale=self.std_scale)["v"]\
+            .view(shape[0], shape[1]).detach()
         advantage, value_target = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
                                                                          estimated_next_state_values=estimated_next_state_values,
                                                                          rewards=rewards)
@@ -170,6 +177,8 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         # this reduces exploration in later runs
         self.beta *= self.beta_deay
 
+        self.std_scale *= self.std_scale_decay
+
         self.buffer = None
 
     def generalized_advantages_estimation(self, estimated_state_values, estimated_next_state_values, rewards):
@@ -216,7 +225,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
     def get_log_dict(self) -> dict:
         return {
-            "var_mean": self.model.variance.detach().cpu().numpy().mean(),
+            "var_mean": self.model.std.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
             "critic_loss": self.critic_loss if self.critic_loss is not None else 0.0,
