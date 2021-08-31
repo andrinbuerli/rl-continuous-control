@@ -196,7 +196,7 @@ class PPOActorCriticRLAgent(PPORLAgent):
             "critic_loss": self.critic_loss if self.critic_loss is not None else None,
             "actor_loss": self.actor_loss if self.actor_loss is not None else None,
             "loss": self.loss if self.loss is not None else None,
-            "grad_model":
+            "model_grad":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.model.parameters()]).mean()
                 if self.loss is not None else None
         }
