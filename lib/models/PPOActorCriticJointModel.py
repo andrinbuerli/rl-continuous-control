@@ -38,8 +38,7 @@ class PPOActorCriticJointModel(nn.Module):
         v = self.v_head(x)
         # we restrict variance to range (0, 1)
         variance = torch.sigmoid(self.variance)
-        cov_matrix = torch.diag_embed(variance)
-        dist = torch.distributions.MultivariateNormal(loc=mu, covariance_matrix=cov_matrix)
+        dist = torch.distributions.Normal(mu, variance)
         actions = dist.sample()
         return {
             "actions": actions,

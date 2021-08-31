@@ -154,7 +154,7 @@ class RLAgentTrainer:
             self.t_sampled += t_sampled
 
         return np.transpose(np.array(s_t0), axes=[1, 0, 2]), np.transpose(np.array(a_t0), axes=[1, 0, 2]), \
-               np.transpose(np.array(al_t0), axes=[1, 0, 2]), np.transpose(np.array(pa_t0), axes=[1, 0]), \
+               np.transpose(np.array(al_t0), axes=[1, 0, 2]), np.transpose(np.array(pa_t0), axes=[1, 0, 2]), \
                np.transpose(np.array(r_t1), axes=[1, 0]), np.transpose(np.array(s_t1), axes=[1, 0, 2]),
 
     def __log_and_metrics(self, t_sampled):

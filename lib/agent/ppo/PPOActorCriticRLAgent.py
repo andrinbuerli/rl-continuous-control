@@ -99,7 +99,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
                                                            rewards=rewards)
 
         new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
-                       action_log_probs.reshape(-1), value_target.reshape(-1), advantage.reshape(-1)]
+                       action_log_probs.reshape(-1, action_log_probs.shape[-1]), value_target.reshape(-1), advantage.reshape(-1)]
         if self.buffer is None:
             self.buffer = new_samples
         else:
@@ -125,7 +125,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             batch_action_logits = action_logits[minibatch_idx]
             batch_action_log_probs = action_log_probs[minibatch_idx]
             batch_value_target = value_target[minibatch_idx]
-            batch_advantage = advantage[minibatch_idx]
+            batch_advantage = advantage[minibatch_idx].view(-1, 1)
 
             pred = self.model(batch_states)
             batch_estimated_state_values = pred["v"].reshape(-1)
