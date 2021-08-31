@@ -125,7 +125,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
         states, action_logits, action_log_probs, value_target, advantage = self.buffer
 
-        #advantage = (advantage - advantage.mean()) / advantage.std()
+        advantage = (advantage - advantage.mean()) / advantage.std()
 
         indices = torch.randperm(buffer_length)
         batches = [indices[i * self.batch_size:(i + 1) * self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
