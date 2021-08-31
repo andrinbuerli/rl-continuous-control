@@ -74,8 +74,11 @@ class PPOActorCriticRLAgent(BaseRLAgent):
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         pred = self.model(states)
+        log_probs = pred["dist"].log_prob(pred["actions"]) \
+            .sum(dim=1) \
+            .detach().cpu().numpy()
         return np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), pred["actions"].detach().cpu().numpy(), \
-               pred["dist"].log_prob(pred["actions"]).detach().cpu().numpy()
+               log_probs
 
     def learn(
             self,
@@ -93,13 +96,15 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
         shape = states.shape
         estimated_state_values = self.model(states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
-        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
+        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]))["v"].view(shape[0],
+                                                                                               shape[1]).detach()
         advantage, value_target = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
-                                                           estimated_next_state_values=estimated_next_state_values,
-                                                           rewards=rewards)
+                                                                         estimated_next_state_values=estimated_next_state_values,
+                                                                         rewards=rewards)
 
         new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
-                       action_log_probs.reshape(-1, action_log_probs.shape[-1]), value_target.reshape(-1), advantage.reshape(-1)]
+                       action_log_probs.reshape(-1), value_target.reshape(-1),
+                       advantage.reshape(-1)]
         if self.buffer is None:
             self.buffer = new_samples
         else:
@@ -114,7 +119,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         advantage = (advantage - advantage.mean()) / advantage.std()
 
         indices = torch.randperm(buffer_length)
-        batches = [indices[i*self.batch_size:(i+1)*self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
+        batches = [indices[i * self.batch_size:(i + 1) * self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
 
         actor_losses = []
         critic_losses = []
@@ -130,15 +135,16 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             pred = self.model(batch_states)
             batch_estimated_state_values = pred["v"].reshape(-1)
             critic_loss = self.critic_loss_coefficient * \
-                               ((batch_value_target - batch_estimated_state_values) ** 2).mean()
+                          ((batch_value_target - batch_estimated_state_values) ** 2).mean()
 
-            new_log_probs, entropy = pred["dist"].log_prob(batch_action_logits), pred["dist"].entropy()
+            # multiply the probs of each action dimension (sum the log_probs)
+            new_log_probs = pred["dist"].log_prob(batch_action_logits).sum(dim=1)
 
             ratio = torch.exp(new_log_probs - batch_action_log_probs)
             clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
             clipped_surrogate = torch.min(ratio * batch_advantage, clipped_ratio * batch_advantage)
 
-            regularization = self.beta * entropy
+            regularization = self.beta * pred["dist"].entropy().mean(dim=1)
 
             actor_loss = (clipped_surrogate + regularization).mean()
             loss = actor_loss + critic_loss
