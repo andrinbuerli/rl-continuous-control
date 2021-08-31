@@ -2,16 +2,16 @@ import numpy as np
 import torch
 
 from lib.agent.ppo.PPORLAgent import PPORLAgent
-from lib.policy.StochasticBasePolicy import StochasticBasePolicy
-from lib.function.StateValueFunction import StateValueFunction
+from lib.models.policy.StochasticBasePolicy import StochasticBasePolicy
+from lib.models.function import StateValueFunction
+from lib.models.PPOActorCriticJointModel import PPOActorCriticJointModel
 
 
 class PPOActorCriticRLAgent(PPORLAgent):
 
     def __init__(
             self,
-            actor: StochasticBasePolicy,
-            critic: StateValueFunction,
+            model: PPOActorCriticJointModel,
             discount_rate: float = .99,
             epsilon: float = 0.1,
             epsilon_decay: float = .999,
@@ -44,7 +44,7 @@ class PPOActorCriticRLAgent(PPORLAgent):
         @param device: the device on which the calculations are to be executed
         """
         super(PPOActorCriticRLAgent, self).__init__(
-            policy=actor,
+            policy=model,
             discount_rate=discount_rate,
             epsilon=epsilon,
             epsilon_decay=epsilon_decay,
@@ -58,13 +58,11 @@ class PPOActorCriticRLAgent(PPORLAgent):
         self.batch_size = batch_size
         self.critic_loss_coefficient = critic_loss_coefficient
         self.gae_lambda = gae_lambda
-        self.actor = self.policy
-        self.critic = critic.to(device)
 
-        self.actor_optimizer = self.policy_optimizer
-        self.critic_optimizer = self._get_optimizer(self.critic.parameters())
-        self.models = [self.actor, self.critic]
-        self.model_names = ["actor", "critic"]
+        self.model = model
+        self.model_optimizer = self.policy_optimizer
+        self.model_names = [self.model]
+        self.model_names = ["actor_critic"]
 
         self.loss = None
         self.critic_loss = None
@@ -92,8 +90,8 @@ class PPOActorCriticRLAgent(PPORLAgent):
         future_discounted_rewards = self.get_discounted_future_rewards(rewards)
 
         shape = states.shape
-        estimated_state_values = self.critic(states.reshape(-1, shape[-1])).view(shape[0], shape[1]).detach()
-        estimated_next_state_values = self.critic(next_states.reshape(-1, shape[-1])).view(shape[0], shape[1]).detach()
+        estimated_state_values = self.model(states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
+        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]))["v"].view(shape[0], shape[1]).detach()
         advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
                                                            estimated_next_state_values=estimated_next_state_values,
                                                            rewards=rewards)
@@ -111,8 +109,14 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
         states, action_logits, action_log_probs, future_discounted_rewards, advantage = self.buffer
 
+        advantage = (advantage - advantage.mean()) / advantage.std()
+
         indices = torch.randperm(buffer_length)
         batches = [indices[i*self.batch_size:(i+1)*self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
+
+        actor_losses = []
+        critic_losses = []
+        losses = []
 
         for minibatch_idx in batches:
             batch_states = states[minibatch_idx]
@@ -121,28 +125,35 @@ class PPOActorCriticRLAgent(PPORLAgent):
             batch_future_discounted_rewards = future_discounted_rewards[minibatch_idx]
             batch_advantage = advantage[minibatch_idx]
 
-            batch_estimated_state_values = self.critic(states[minibatch_idx]).reshape(-1)
-            self.critic_loss = self.critic_loss_coefficient * \
+            pred = self.model(batch_states)
+            batch_estimated_state_values = pred["v"].reshape(-1)
+            critic_loss = self.critic_loss_coefficient * \
                                ((batch_future_discounted_rewards - batch_estimated_state_values) ** 2).mean()
 
-            self.actor_loss = -self.clipped_surrogate_function(old_log_probs=batch_action_log_probs,
-                                                               states=batch_states,
-                                                               action_logits=batch_action_logits,
-                                                               future_discounted_rewards=batch_advantage)
+            new_log_probs, entropy = pred["dist"].log_prob(batch_action_logits), pred["dist"].entropy()
 
-            self.actor_optimizer.zero_grad()
-            self.actor_loss.backward(retain_graph=True)
+            ratio = torch.exp(new_log_probs - batch_action_log_probs)
+            clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
+            clipped_surrogate = torch.min(ratio * batch_advantage, clipped_ratio * batch_advantage)
+
+            regularization = self.beta * entropy
+
+            actor_loss = (clipped_surrogate + regularization).mean()
+            loss = actor_loss + critic_loss
+
+            self.model_optimizer.zero_grad()
+            loss.backward()
             if self.grad_clip_max is not None:
-                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.grad_clip_max)
-            self.actor_optimizer.step()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_max)
+            self.model_optimizer.step()
 
-            self.critic_optimizer.zero_grad()
-            self.critic_loss.backward()
-            if self.grad_clip_max is not None:
-                torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.grad_clip_max)
-            self.critic_optimizer.step()
+            actor_losses.append(actor_loss.detach().cpu().numpy())
+            critic_losses.append(critic_loss.detach().cpu().numpy())
+            losses.append(loss.detach().cpu().numpy())
 
-            self.loss = self.actor_loss + self.critic_loss
+        self.actor_loss = np.mean(actor_losses)
+        self.critic_loss = np.mean(critic_losses)
+        self.loss = np.mean(losses)
 
         # the clipping parameter reduces as time goes on
         self.epsilon *= self.epsilon_decay
@@ -179,16 +190,13 @@ class PPOActorCriticRLAgent(PPORLAgent):
 
     def get_log_dict(self) -> dict:
         return {
-            "var_mean": self.actor.variance.detach().cpu().numpy().mean(),
+            "var_mean": self.model.variance.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
-            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
-            "actor_loss": self.actor_loss.detach().cpu().numpy() if self.actor_loss is not None else None,
-            "loss": self.loss.detach().cpu().numpy() if self.loss is not None else None,
-            "grad_actor":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.actor.parameters()]).mean()
-                if self.actor_loss is not None else None,
-            "grad_critic":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.critic.parameters()]).mean()
-                if self.critic_loss is not None else None
+            "critic_loss": self.critic_loss if self.critic_loss is not None else None,
+            "actor_loss": self.actor_loss if self.actor_loss is not None else None,
+            "loss": self.loss if self.loss is not None else None,
+            "grad_model":
+                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.model.parameters()]).mean()
+                if self.loss is not None else None
         }

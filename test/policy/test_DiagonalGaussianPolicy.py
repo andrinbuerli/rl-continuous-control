@@ -1,5 +1,5 @@
 import numpy as np
-from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
+from lib.models.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
 
 import torch
 

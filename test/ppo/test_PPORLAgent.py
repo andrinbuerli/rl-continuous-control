@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
-from lib.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
+from lib.models.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
+from lib.models.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
 from lib.agent.ppo.PPORLAgent import PPORLAgent
 from test.ppo.MockPolicy import MockPolicy
 

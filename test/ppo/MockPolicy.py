@@ -1,7 +1,7 @@
 import torch
 from torch import nn as nn
 
-from lib.policy.StochasticBasePolicy import StochasticBasePolicy
+from lib.models.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
 class MockPolicy(StochasticBasePolicy):

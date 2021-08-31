@@ -8,8 +8,8 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
-from lib.function.StateValueFunction import StateValueFunction
+from lib.models.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
+from lib.models.function import StateValueFunction
 from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
 from lib.log.WandbLogger import WandbLogger
 

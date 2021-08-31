@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from typing import Callable
 
-from lib.policy.StochasticBasePolicy import StochasticBasePolicy
+from lib.models.policy.StochasticBasePolicy import StochasticBasePolicy
 
 
 class StochasticDiscretePolicy(StochasticBasePolicy):

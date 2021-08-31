@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from lib.agent.BaseRLAgent import BaseRLAgent
-from lib.policy import StochasticBasePolicy
+from lib.models.policy import StochasticBasePolicy
 
 
 class PPORLAgent(BaseRLAgent):
@@ -52,9 +52,9 @@ class PPORLAgent(BaseRLAgent):
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
-        actions, action_logits, dist = self.policy(states)
-        return np.clip(actions.detach().cpu().numpy(), -1, 1), action_logits.detach().cpu().numpy(),\
-               dist.log_prob(action_logits).detach().cpu().numpy()
+        pred = self.policy(states)
+        return np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), pred["actions"].detach().cpu().numpy(),\
+               pred["dist"].log_prob(pred["actions"]).detach().cpu().numpy()
 
     def learn(
             self,
@@ -141,6 +141,7 @@ class PPORLAgent(BaseRLAgent):
         discounts = (self.discount_rate ** indices).view(1, -1)
         discounted_rewards = discounts * rewards
         future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
+
         return future_rewards
 
     def get_log_dict(self) -> dict:

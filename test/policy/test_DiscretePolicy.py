@@ -1,5 +1,5 @@
 import numpy as np
-from lib.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
+from lib.models.policy.StochasticDiscretePolicy import StochasticDiscretePolicy
 
 import torch
 

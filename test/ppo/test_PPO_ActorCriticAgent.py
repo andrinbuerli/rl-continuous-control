@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
-from lib.function.StateValueFunction import StateValueFunction
+from lib.models.function import StateValueFunction
 from test.ppo.MockPolicy import MockPolicy
 
 

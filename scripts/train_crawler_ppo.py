@@ -8,8 +8,9 @@ sys.path.append("../")
 from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
-from lib.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
-from lib.function.StateValueFunction import StateValueFunction
+from lib.models.policy.StochasticContinuousGaussianPolicy import StochasticContinuousGaussianPolicy
+from lib.models.function import StateValueFunction
+from lib.models.PPOActorCriticJointModel import PPOActorCriticJointModel
 from lib.agent.ppo.PPOActorCriticRLAgent import PPOActorCriticRLAgent
 from lib.log.WandbLogger import WandbLogger
 
@@ -41,15 +42,12 @@ if __name__ == "__main__":
         target_reward=3000,
         env_binary_path='../environments/Crawler_Linux_NoVis/Crawler.x86_64')
 
-    policy = StochasticContinuousGaussianPolicy(
-        state_size=env.state_size, action_size=env.action_size,
-        seed=args.seed, reduced_capacity=False)
-    value_function = StateValueFunction(state_size=env.state_size, seed=args.seed, reduced_capacity=False)
+    model = PPOActorCriticJointModel(state_size=env.state_size, action_size=env.action_size,
+                                     seed=args.seed)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     agent = PPOActorCriticRLAgent(
-        actor=policy,
-        critic=value_function,
+        model=model,
         discount_rate=args.discount_rate,
         epsilon=args.epsilon,
         epsilon_decay=args.epsilon_decay,
@@ -66,7 +64,7 @@ if __name__ == "__main__":
     if device != "cpu":
         torch.cuda.set_device(0)
 
-    config = extract_config_from(env, policy, value_function,
+    config = extract_config_from(env, model,
                                  agent, {"n_iterations": args.n_iterations,
                                          "max_t": args.max_t,
                                          "seed": args.seed
