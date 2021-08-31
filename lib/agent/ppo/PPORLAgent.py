@@ -110,17 +110,17 @@ class PPORLAgent(BaseRLAgent):
         dist = self.policy.get_action_distribution(states)
         new_log_probs, entropy = dist.log_prob(action_logits), dist.entropy()
 
-        if future_discounted_rewards.shape[0] > 1:
-            mean = future_discounted_rewards.mean()
-            std = future_discounted_rewards.std() + 1.e-10
+        # if future_discounted_rewards.shape[0] > 1:
+        #     mean = future_discounted_rewards.mean()
+        #     std = future_discounted_rewards.std() + 1.e-10
 
-            rewards_normalized = (future_discounted_rewards - mean) / std
-        else:
-            rewards_normalized = future_discounted_rewards
+        #     rewards_normalized = (future_discounted_rewards - mean) / std
+        # else:
+        #     rewards_normalized = future_discounted_rewards
 
         ratio = torch.exp(new_log_probs - old_log_probs)
         clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
-        clipped_surrogate = torch.min(ratio * rewards_normalized, clipped_ratio * rewards_normalized)
+        clipped_surrogate = torch.min(ratio * future_discounted_rewards, clipped_ratio * future_discounted_rewards)
 
         # include a regularization term
         # this steers new_policy towards a high entropy state
