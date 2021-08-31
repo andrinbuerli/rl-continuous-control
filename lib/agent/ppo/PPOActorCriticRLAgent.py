@@ -193,10 +193,10 @@ class PPOActorCriticRLAgent(PPORLAgent):
             "var_mean": self.model.variance.detach().cpu().numpy().mean(),
             "beta": self.beta,
             "epsilon": self.epsilon,
-            "critic_loss": self.critic_loss if self.critic_loss is not None else None,
-            "actor_loss": self.actor_loss if self.actor_loss is not None else None,
-            "loss": self.loss if self.loss is not None else None,
+            "critic_loss": self.critic_loss if self.critic_loss is not None else 0.0,
+            "actor_loss": self.actor_loss if self.actor_loss is not None else 0.0,
+            "loss": self.loss if self.loss is not None else 0.0,
             "model_grad":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.model.parameters()]).mean()
-                if self.loss is not None else None
+                if self.loss is not None else 0.0
         }
