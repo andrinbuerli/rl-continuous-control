@@ -3,8 +3,8 @@ from typing import Callable
 import torch
 
 from lib.agent.BaseRLAgent import BaseRLAgent
-from lib.policy.DeterministicBasePolicy import DeterministicBasePolicy
-from lib.function.StateActionValueFunction import StateActionValueFunction
+from lib.models.policy import DeterministicBasePolicy
+from lib.models.function import StateActionValueFunction
 from lib.agent.ddpg.OrnsteinUhlenbeckProcess import OrnsteinUhlenbeckProcess
 from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
 
