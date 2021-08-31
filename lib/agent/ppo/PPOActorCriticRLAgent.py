@@ -81,10 +81,12 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         log_probs = pred["dist"].log_prob(pred["actions"]) \
             .sum(dim=1) \
             .detach().cpu().numpy()
-        return\
-            np.clip(pred["actions"].detach().cpu().numpy(), -1, 1), \
-            pred["actions"].detach().cpu().numpy(), \
-            log_probs
+        return {
+            "actions": np.clip(pred["actions"].detach().cpu().numpy(), -1, 1),
+            "action_logits": pred["actions"].detach().cpu().numpy(),
+            "log_probs": log_probs,
+            "dist": pred["dist"]
+        }
 
     def learn(
             self,
@@ -123,7 +125,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
         states, action_logits, action_log_probs, value_target, advantage = self.buffer
 
-        advantage = (advantage - advantage.mean()) / advantage.std()
+        #advantage = (advantage - advantage.mean()) / advantage.std()
 
         indices = torch.randperm(buffer_length)
         batches = [indices[i * self.batch_size:(i + 1) * self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]

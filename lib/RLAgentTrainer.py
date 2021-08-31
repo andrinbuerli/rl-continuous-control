@@ -64,11 +64,12 @@ class RLAgentTrainer:
                 max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
                 max_t = max_t_original[max_t_index]
 
-            states, actions, action_logits, log_probs, rewards, next_states = self.__collect_trajectories(
-                max_t=max_t, intercept=intercept)
-            print(f"{rewards.max()}\n")
-            self.agent.learn(states=states, action_logits=action_logits, action_log_probs=log_probs,
-                             rewards=rewards, next_states=next_states, actions=actions)
+            trajectory = self.__collect_trajectories(max_t=max_t, intercept=intercept)
+
+            self.agent.learn(
+                states=trajectory["states"], action_logits=trajectory["action_logits"],
+                action_log_probs=trajectory["log_probs"], rewards=trajectory["rewards"],
+                next_states=trajectory["next_states"], actions=trajectory["actions"])
 
             score_window_mean = np.mean(self.scores_window)
 
@@ -121,8 +122,8 @@ class RLAgentTrainer:
 
         t_sampled = None
         for t in range(max_t):
-            actions, action_logits, log_probs = self.agent.act(self.states)
-            next_states, rewards, dones = self.env.act(actions)
+            pred = self.agent.act(self.states)
+            next_states, rewards, dones = self.env.act(pred["actions"])
 
             t_sampled = t + 1
             if any(dones):
@@ -142,8 +143,8 @@ class RLAgentTrainer:
                 print("!!!!! WARNING NAN rewards detected, penalizing agent with -5.0 !!!!!")
                 rewards[np.isnan(rewards)] = -5.0  # NAN penalty
 
-            s_t0.append(self.states), a_t0.append(actions), al_t0.append(action_logits), pa_t0.append(log_probs)
-            r_t1.append(rewards), s_t1.append(next_states)
+            s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
+            pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states)
 
             self.states = next_states
             self.trajectory_scores += rewards
@@ -153,9 +154,14 @@ class RLAgentTrainer:
         else:
             self.t_sampled += t_sampled
 
-        return np.transpose(np.array(s_t0), axes=[1, 0, 2]), np.transpose(np.array(a_t0), axes=[1, 0, 2]), \
-               np.transpose(np.array(al_t0), axes=[1, 0, 2]), np.transpose(np.array(pa_t0), axes=[1, 0]), \
-               np.transpose(np.array(r_t1), axes=[1, 0]), np.transpose(np.array(s_t1), axes=[1, 0, 2]),
+        return {
+            "states": np.transpose(np.array(s_t0), axes=[1, 0, 2]),
+            "actions": np.transpose(np.array(a_t0), axes=[1, 0, 2]),
+            "action_logits": np.transpose(np.array(al_t0), axes=[1, 0, 2]),
+            "log_probs": np.transpose(np.array(pa_t0), axes=[1, 0]),
+            "rewards": np.transpose(np.array(r_t1), axes=[1, 0]),
+            "next_states": np.transpose(np.array(s_t1), axes=[1, 0, 2]),
+        }
 
     def __log_and_metrics(self, t_sampled):
         mean_score = self.trajectory_scores.mean()

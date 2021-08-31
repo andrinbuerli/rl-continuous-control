@@ -19,14 +19,13 @@ class PPOActorCriticJointModel(nn.Module):
         self.seed = torch.manual_seed(seed)
 
         self.feature_extractor = nn.Sequential(
-            nn.BatchNorm1d(state_size),
+            # nn.BatchNorm1d(state_size),
             nn.Linear(state_size, 512),
-            nn.LeakyReLU(),
-            nn.BatchNorm1d(512),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.BatchNorm1d(256),
+            # nn.BatchNorm1d(512),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            # nn.BatchNorm1d(256),
         )
 
         self.v_head = nn.Linear(256, 1)
