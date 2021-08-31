@@ -27,7 +27,7 @@ if __name__ == "__main__":
             "beta_deay": .995,
             "learning_rate": 0.0001,
             "batch_size": 1024,
-            "SGD_epoch": 8,
+            "SGD_epoch": 32,
             "n_iterations": int(1e7),
             "max_t": 512,
             "gae_lambda": 0.99,

@@ -24,7 +24,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             critic_loss_coefficient: float = 0.5,
             grad_clip_max: float = None,
             std_scale: float = 1.0,
-            std_scale_decay: float = 0.99,
+            std_scale_decay: float = 0.999,
             device="cpu",
     ):
         """
