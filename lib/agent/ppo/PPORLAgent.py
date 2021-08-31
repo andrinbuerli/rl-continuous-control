@@ -136,13 +136,14 @@ class PPORLAgent(BaseRLAgent):
         @param rewards: the raw received rewards [trajectories, time steps]
         @return: the discounted future rewards [trajectories, time steps]
         """
-        indices = torch.linspace(0, rewards.shape[1] - 1, rewards.shape[1]).to(torch.float32).to(self.device)
-        reversed_indices = torch.linspace(rewards.shape[1] - 1, 0, rewards.shape[1]).to(torch.long).to(self.device)
-        discounts = (self.discount_rate ** indices).view(1, -1)
-        discounted_rewards = discounts * rewards
-        future_rewards = discounted_rewards[:, reversed_indices].cumsum(dim=1)[:, reversed_indices].to(torch.float)
 
-        return future_rewards
+        T = rewards.shape[1]
+        discounted_future_rewards = torch.empty_like(rewards)
+        for t in range(T):
+            coefficients = ((self.discount_rate) ** torch.arange(0, T - t, 1)).to(self.device)
+            discounted_future_rewards[:, t] = (rewards[:, t:] * coefficients).sum(dim=1)
+
+        return discounted_future_rewards
 
     def get_log_dict(self) -> dict:
         return {}
