@@ -153,7 +153,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
             regularization = self.beta * pred["dist"].entropy().mean(dim=1)
 
-            actor_loss = (-clipped_surrogate + regularization).mean()
+            actor_loss = - (clipped_surrogate.mean() + regularization.mean())
             loss = actor_loss + critic_loss
 
             self.model_optimizer.zero_grad()
