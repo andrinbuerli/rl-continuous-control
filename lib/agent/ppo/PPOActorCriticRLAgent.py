@@ -24,7 +24,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             critic_loss_coefficient: float = 0.5,
             grad_clip_max: float = None,
             std_scale: float = 1.0,
-            std_scale_decay: float = 0.995,
+            std_scale_decay: float = 0.9999,
             device="cpu",
     ):
         """
@@ -231,10 +231,8 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             "critic_loss": self.critic_loss if self.critic_loss is not None else 0.0,
             "actor_loss": self.actor_loss if self.actor_loss is not None else 0.0,
             "loss": self.loss if self.loss is not None else 0.0,
-            "grad_critic":
+            "std_scale": self.std_scale,
+            "grad_model":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.model.parameters()]).mean()
                 if self.loss is not None else 0.0,
-            "grad_actor":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.model.parameters()]).mean()
-                if self.loss is not None else 0.0
         }
