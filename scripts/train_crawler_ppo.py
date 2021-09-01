@@ -27,7 +27,7 @@ if __name__ == "__main__":
             "beta_deay": .999,
             "learning_rate": 0.0001,
             "batch_size": 2048,
-            "SGD_epoch": 32,
+            "SGD_epoch": 64,
             "n_iterations": int(1e7),
             "max_t": 512,
             "gae_lambda": 0.99,
@@ -38,7 +38,7 @@ if __name__ == "__main__":
             "std_scale_decay":  0.999,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0]),
-            "model_path": "agents/Crawler-PPO_ActorCritic_1-5133906759-1435.31"
+            "model_path": ""
         })
 
     env = ParallelAgentsUnityEnvironment(
