@@ -29,7 +29,7 @@ if __name__ == "__main__":
             "batch_size": 1024,
             "SGD_epoch": 64,
             "n_iterations": int(1e7),
-            "max_t": 1024,
+            "max_t": 2048,
             "gae_lambda": 0.99,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
