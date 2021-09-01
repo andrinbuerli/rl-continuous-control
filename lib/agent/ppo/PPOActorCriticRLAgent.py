@@ -205,7 +205,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
         advantages = []
 
-        advantage = torch.zeros((estimated_state_values.shape[0]))
+        advantage = torch.zeros((estimated_state_values.shape[0])).to(self.device)
         for i in reversed(range(T)):
             td_error = rewards[:, i]\
                        + self.discount_rate * (1 - dones[:, i]) * estimated_next_state_values[:, i]\
