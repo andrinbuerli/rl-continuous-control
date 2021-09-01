@@ -6,7 +6,7 @@ from lib.agent.BaseRLAgent import BaseRLAgent
 from lib.models.policy import DeterministicBasePolicy
 from lib.models.function import StateActionValueFunction
 from lib.agent.ddpg.OrnsteinUhlenbeckProcess import OrnsteinUhlenbeckProcess
-from lib.agent.ddpg.ReplayBuffer import ReplayBuffer, PrioritizedReplayBuffer
+from lib.agent.ddpg.ReplayBuffer import ReplayBuffer
 
 
 class DDPGRLAgent(BaseRLAgent):
