@@ -47,7 +47,8 @@ class RLAgentTrainer:
             n_iterations: int,
             max_t: Union[List[int], int],
             max_t_iteration:  Union[List[int], int] = None,
-            intercept: bool = False):
+            intercept: bool = False,
+            t_max_episode: int = 1e3):
         """
         RL agent training
 
@@ -64,12 +65,13 @@ class RLAgentTrainer:
                 max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
                 max_t = max_t_original[max_t_index]
 
-            trajectory = self.__collect_trajectories(max_t=max_t, intercept=intercept)
+            trajectory = self.__collect_trajectories(max_t=max_t, intercept=intercept, t_max_episode=t_max_episode)
 
             self.agent.learn(
                 states=trajectory["states"], action_logits=trajectory["action_logits"],
                 action_log_probs=trajectory["log_probs"], rewards=trajectory["rewards"],
-                next_states=trajectory["next_states"], actions=trajectory["actions"])
+                next_states=trajectory["next_states"], actions=trajectory["actions"],
+                dones=trajectory["dones"])
 
             score_window_mean = np.mean(self.scores_window)
 
@@ -100,7 +102,7 @@ class RLAgentTrainer:
         dir_name = f'{self.env.name}-{self.agent.get_name()}_{i_iter}-{self.seed}-{round(score_window_mean, 2)}'
         self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
 
-    def __collect_trajectories(self, max_t: int, intercept: bool = False):
+    def __collect_trajectories(self, max_t: int, intercept: bool = False, t_max_episode: int = 1e3):
         """
         Sample trajectories from the environment
 
@@ -118,41 +120,40 @@ class RLAgentTrainer:
             self.trajectory_scores = np.zeros(self.env.num_agents)
             self.t_sampled = 0
 
-        s_t0, a_t0, al_t0, pa_t0, r_t1, s_t1 = ([] for _ in range(6))
+        s_t0, a_t0, al_t0, pa_t0, r_t1, s_t1, d = ([] for _ in range(7))
 
-        t_sampled = None
-        for t in range(max_t):
+        t = 0
+        while True:
             pred = self.agent.act(self.states)
             next_states, rewards, dones = self.env.act(pred["actions"])
-
-            t_sampled = t + 1
-            if any(dones):
-                if intercept:
-                    self.t_sampled += t_sampled
-                    self.__log_and_metrics(self.t_sampled)
-
-                    self.agent.reset()
-                    self.states = self.env.reset()
-                    self.trajectory_scores = np.zeros(self.env.num_agents)
-                    self.t_sampled = 0
-                    continue
-                else:
-                    break
 
             if np.isnan(rewards).any():
                 print("!!!!! WARNING NAN rewards detected, penalizing agent with -5.0 !!!!!")
                 rewards[np.isnan(rewards)] = -5.0  # NAN penalty
 
             s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
-            pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states)
+            pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states), d.append(dones)
 
             self.states = next_states
             self.trajectory_scores += rewards
 
+            t += 1
+            if t >= max_t:
+                if np.all(dones) or t >= t_max_episode:
+                    if intercept:
+                        self.__log_and_metrics(self.t_sampled)
+
+                        self.agent.reset()
+                        self.states = self.env.reset()
+                        self.trajectory_scores = np.zeros(self.env.num_agents)
+                        self.t_sampled = 0
+
+                    break
+
         if not intercept:
-            self.__log_and_metrics(t_sampled)
+            self.__log_and_metrics(t)
         else:
-            self.t_sampled += t_sampled
+            self.t_sampled += t
 
         return {
             "states": np.transpose(np.array(s_t0), axes=[1, 0, 2]),
@@ -161,6 +162,7 @@ class RLAgentTrainer:
             "log_probs": np.transpose(np.array(pa_t0), axes=[1, 0]),
             "rewards": np.transpose(np.array(r_t1), axes=[1, 0]),
             "next_states": np.transpose(np.array(s_t1), axes=[1, 0, 2]),
+            "dones": np.transpose(np.array(d), axes=[1, 0])
         }
 
     def __log_and_metrics(self, t_sampled):

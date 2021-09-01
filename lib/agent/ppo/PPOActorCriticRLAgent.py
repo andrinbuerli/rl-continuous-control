@@ -100,12 +100,14 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray):
+            next_states: np.ndarray,
+            dones: np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
         next_states = torch.tensor(next_states, dtype=torch.float32).to(self.device)
         action_logits = torch.tensor(action_logits, dtype=torch.float32).to(self.device)
         rewards = torch.tensor(rewards, dtype=torch.float32).to(self.device)
         action_log_probs = torch.tensor(action_log_probs, dtype=torch.float32).to(self.device)
+        dones = torch.tensor(dones, dtype=torch.float32).to(self.device)
 
         shape = states.shape
         estimated_state_values = self.model(states.reshape(-1, shape[-1]), scale=self.std_scale)["v"] \
@@ -114,7 +116,8 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             .view(shape[0], shape[1]).detach()
         advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
                                                            estimated_next_state_values=estimated_next_state_values,
-                                                           rewards=rewards)
+                                                           rewards=rewards,
+                                                           dones=dones)
         value_target = advantage + estimated_state_values
 
         new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
@@ -140,7 +143,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         critic_losses = []
         losses = []
 
-        for minibatch_idx in batches:
+        for batch_i, minibatch_idx in enumerate(batches):
             batch_states = states[minibatch_idx]
             batch_action_logits = action_logits[minibatch_idx]
             batch_action_log_probs = action_log_probs[minibatch_idx]
@@ -188,7 +191,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
         self.buffer = None
 
-    def generalized_advantages_estimation(self, estimated_state_values, estimated_next_state_values, rewards):
+    def generalized_advantages_estimation(self, estimated_state_values, estimated_next_state_values, rewards, dones):
         """
         Estimate advantages for each (state, next_state, reward) tuple
 
@@ -197,17 +200,24 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         @param rewards: received reward at time step t [trajectories, time steps]
         @return: generalized advantage estimation [trajectories, time steps]
         """
-        temporal_differences = rewards \
-                               + self.discount_rate * estimated_next_state_values \
-                               - estimated_state_values
 
         T = estimated_state_values.shape[1]
-        advantage_estimation = torch.empty_like(temporal_differences)
-        for t in range(T):
-            coefficients = ((self.gae_lambda * self.discount_rate) ** torch.arange(0, T - t, 1)).to(self.device)
-            advantage_estimation[:, t] = (temporal_differences[:, t:] * coefficients).sum(dim=1)
 
-        return advantage_estimation
+        advantages = []
+
+        advantage = torch.zeros((estimated_state_values.shape[0]))
+        for i in reversed(range(T)):
+            td_error = rewards[:, i]\
+                       + self.discount_rate * (1 - dones[:, i]) * estimated_next_state_values[:, i]\
+                       - estimated_state_values[:, i]
+
+            advantage = advantage * self.gae_lambda * self.discount_rate * (1 - dones[:, i]) + td_error
+
+            advantages.append(advantage)
+
+        advantages = torch.stack(advantages[::-1]).T
+
+        return advantages
 
     def get_discounted_future_rewards(self, rewards):
         """

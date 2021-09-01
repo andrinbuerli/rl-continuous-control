@@ -48,7 +48,8 @@ class BaseRLAgent:
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray):
+            next_states: np.ndarray,
+            dones: np.ndarray):
         """
         Learn from sampled trajectories.
 
