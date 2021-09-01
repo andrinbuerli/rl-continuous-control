@@ -34,7 +34,7 @@ if __name__ == "__main__":
             "enable_log": 1,
             "critic_loss_coefficient": .5,
             "grad_clip_max": None,
-            "std_scale": 1.0,
+            "std_scale": .001,
             "std_scale_decay":  0.999,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
