@@ -2,7 +2,7 @@ import numpy as np
 
 
 class OrnsteinUhlenbeckProcess:
-    def __init__(self, theta, mu=0., sigma=1., dt=1e-2, x0=None, size=1, sigma_min=None, n_steps_annealing=1000):
+    def __init__(self, theta=0.15, mu=0., sigma=0.15, dt=1e-2, x0=None, size=1, sigma_min=0.05, n_steps_annealing=1000):
         """
         Discretized Ornstein Uhlenbeck process simulation.
         https://planetmath.org/ornsteinuhlenbeckprocess

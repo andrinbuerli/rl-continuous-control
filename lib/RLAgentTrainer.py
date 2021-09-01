@@ -139,7 +139,8 @@ class RLAgentTrainer:
 
             t += 1
             if t >= max_t:
-                if np.all(dones) or t >= t_max_episode:
+                if np.all(dones) or t >= t_max_episode\
+                        or (intercept and self.t_sampled + t >=t_max_episode):
                     if intercept:
                         self.__log_and_metrics(self.t_sampled)
 
@@ -148,6 +149,9 @@ class RLAgentTrainer:
                         self.trajectory_scores = np.zeros(self.env.num_agents)
                         self.t_sampled = 0
 
+                    break
+
+                if intercept:
                     break
 
         if not intercept:

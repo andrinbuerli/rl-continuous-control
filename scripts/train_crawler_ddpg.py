@@ -20,15 +20,15 @@ if __name__ == "__main__":
         program_name='Crawler PPO Actor Critic style RL agent trainer',
         config_objects={
             "gamma": 0.99,
-            "epsilon": 1,
+            "epsilon": 1.0,
             "epsilon_decay": .999995,
-            "epsilon_min": 0.01,
+            "epsilon_min": 0.05,
             "buffer_size": int(1e6),
-            "batch_size": 256,
+            "batch_size": 1024,
             "tau": 1e-3,
-            "update_every": 1,
+            "update_every": 2,
             "learning_rate": 0.0001,
-            "update_for": 32,
+            "update_for": 12,
             "n_iterations": int(1e7),
             "max_t": 20,
             "max_t_iteration": [2000, 4000, 6000, 8000],
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
     trainer.train(n_iterations=args.n_iterations, max_t=args.max_t, max_t_iteration=args.max_t_iteration,
-                  intercept=True)
+                  intercept=True, t_max_episode=1024)
 
     env.dispose()
     logger.dispose()

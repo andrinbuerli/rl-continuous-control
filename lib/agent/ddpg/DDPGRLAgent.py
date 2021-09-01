@@ -84,7 +84,7 @@ class DDPGRLAgent(BaseRLAgent):
         self.argmaxpolicy_local = get_actor().to(device)
         self.argmaxpolicy_target = get_actor().to(device)
 
-        self.random_process = OrnsteinUhlenbeckProcess(theta=1, size=self.action_size)
+        self.random_process = OrnsteinUhlenbeckProcess(size=self.action_size)
 
         super(DDPGRLAgent, self).__init__(
             models=[self.qnetwork_local, self.qnetwork_target, self.argmaxpolicy_local, self.argmaxpolicy_target],
@@ -108,7 +108,7 @@ class DDPGRLAgent(BaseRLAgent):
         self.policy_gradients = None
         self.critic_loss = None
 
-    def act(self, states: np.ndarray, training: int = 1, action_lower_bound=-1, action_upper_bound=1) -> (np.ndarray, np.ndarray):
+    def act(self, states: np.ndarray, eps: float = None, training: int = 1, action_lower_bound=-1, action_upper_bound=1) -> (np.ndarray, np.ndarray):
         """
         Determine next action based on current states
 
@@ -129,7 +129,9 @@ class DDPGRLAgent(BaseRLAgent):
 
         actions = actions.detach().cpu().numpy()
 
-        actions += training * max(self.eps, 0) * self.random_process.sample()
+        if np.random.rand() < (eps if eps is not None else self.eps):
+            actions += training * self.random_process.sample()
+
         actions = np.clip(actions, -1., 1.)
 
         return {
@@ -145,37 +147,26 @@ class DDPGRLAgent(BaseRLAgent):
             action_logits: np.ndarray,
             action_log_probs: np.ndarray,
             rewards: np.ndarray,
-            next_states: np.ndarray):
+            next_states: np.ndarray,
+            dones: np.ndarray):
+        self.t_step += 1
         # Save experience in replay memory
-        for state, action, reward, next_state in zip(states.reshape(states.shape[0] * states.shape[1], -1),
+        for state, action, reward, next_state, done in zip(states.reshape(states.shape[0] * states.shape[1], -1),
                                                      actions.reshape(states.shape[0] * states.shape[1], -1),
                                                      rewards.reshape(states.shape[0] * states.shape[1], -1),
-                                                     next_states.reshape(states.shape[0] * states.shape[1], -1)):
-            if self.prioritized_exp_replay:
-                priority = np.abs(self.__calculate_td_error(
-                    torch.from_numpy(state).float().to(device),
-                    torch.tensor(action).float().to(device),
-                    torch.tensor(reward).float().to(device),
-                    torch.from_numpy(next_state).float().to(device),
-                    torch.tensor(done).float().to(device)).cpu().detach().numpy()[0, 0])
+                                                     next_states.reshape(states.shape[0] * states.shape[1], -1),
+                                                     dones.reshape(states.shape[0] * states.shape[1], -1)):
+            self.memory.add(state, action, reward, next_state, done)
 
-                self.memory.add(state, action, reward, next_state, priority)
-            else:
-                self.memory.add(state, action, reward, next_state)
-
-        # Learn every self.update_every time steps.
-        self.t_step = (self.t_step + 1) % self.update_every
-        if self.t_step == 0:
+        if len(self.memory) > self.batch_size * self.update_for and (self.t_step + 1) % self.update_every:
             for _ in range(self.update_for):
                 # If enough samples are available in memory, get random subset and learn
-                if len(self.memory) > self.batch_size:
-                    if self.prioritized_exp_replay:
-                        experiences = self.memory.sample(a=self.prio_a, b=self.prio_b)
-                        self.prio_b = min(1, self.prio_b + self.prio_b_growth)
-                    else:
-                        experiences = self.memory.sample()
+                experiences = self.memory.sample()
 
-                    self.__learn(experiences)
+                self.__learn(experiences)
+
+            self.__soft_update(self.qnetwork_local, self.qnetwork_target)
+            self.__soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
 
             self.eps = max(self.eps * self.eps_decay, self.epsilon_min)
 
@@ -206,20 +197,11 @@ class DDPGRLAgent(BaseRLAgent):
         }
 
     def __learn(self, experiences):
-        if self.prioritized_exp_replay:
-            states, actions, rewards, next_states, indices, importance_sampling_weights = experiences
-        else:
-            states, actions, rewards, next_states = experiences
+        states, actions, rewards, next_states, dones = experiences
 
-        td_error = self.__calculate_td_error(states, actions, rewards, next_states)
+        td_error = self.__calculate_td_error(states, actions, rewards, next_states, dones)
 
-        if self.prioritized_exp_replay:
-            self.memory.update_priorities(indices, np.abs(td_error.cpu().detach().numpy()))
-
-        if self.prioritized_exp_replay:
-            self.critic_loss = (td_error ** 2 * importance_sampling_weights).mean()
-        else:
-            self.critic_loss = (td_error ** 2).mean()
+        self.critic_loss = (td_error ** 2).mean()
 
         self.qnetwork_optimizer.zero_grad()
         self.critic_loss.backward()
@@ -238,14 +220,11 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.loss = self.critic_loss + self.policy_gradients
 
-        self.__soft_update(self.qnetwork_local, self.qnetwork_target)
-        self.__soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
-
-    def __calculate_td_error(self, states, actions, rewards, next_states):
+    def __calculate_td_error(self, states, actions, rewards, next_states, dones):
         next_best_actions = self.argmaxpolicy_target.forward(next_states)
         q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
 
-        q_targets = rewards + self.gamma * q_values_next_state
+        q_targets = rewards + (1 - dones) * self.gamma * q_values_next_state
         q_values = self.qnetwork_local.forward(states, actions)
         td_error = q_values - q_targets
 
