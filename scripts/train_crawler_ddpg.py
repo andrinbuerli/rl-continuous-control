@@ -9,7 +9,7 @@ from lib.helper import parse_config_for, extract_config_from
 from lib.RLAgentTrainer import RLAgentTrainer
 from lib.env.ParallelAgentsUnityEnvironment import ParallelAgentsUnityEnvironment
 from lib.models.policy.DeterministicContinuousGaussianPolicy import DeterministicContinuousGaussianPolicy
-from lib.models.function import StateActionValueFunction
+from lib.models.function.StateActionValueFunction import StateActionValueFunction
 from lib.agent.ddpg.DDPGRLAgent import DDPGRLAgent
 from lib.log.WandbLogger import WandbLogger
 
@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     policy = lambda: DeterministicContinuousGaussianPolicy(
         state_size=env.state_size, action_size=env.action_size,
-        seed=args.seed, output_transform=lambda x: torch.tanh(x), reduced_capacity=False)
+        seed=args.seed, output_transform=lambda x: torch.tanh(x))
     value_function = lambda: StateActionValueFunction(
         state_size=env.state_size, action_size=env.action_size,
-        seed=args.seed, reduced_capacity=False)
+        seed=args.seed)
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     agent = DDPGRLAgent(
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         device=device,
         action_size=env.action_size,
         state_size=env.state_size,
-        grad_clip_max=1000)
+        grad_clip_max=None)
 
     if args.agent_weights is not None:
         agent.load(args.agent_weights)

@@ -13,8 +13,8 @@ class DDPGRLAgent(BaseRLAgent):
 
     def __init__(
             self,
-            get_actor: Callable[[], DeterministicBasePolicy],
-            get_critic: Callable[[], StateActionValueFunction],
+            get_actor: Callable[[], type(DeterministicBasePolicy)],
+            get_critic: Callable[[], type(StateActionValueFunction)],
             state_size: int,
             action_size: int,
             seed: int = 0,
@@ -32,7 +32,7 @@ class DDPGRLAgent(BaseRLAgent):
             epsilon: float = 1.0,
             epsilon_decay: float = .9,
             epsilon_min: float = .01,
-            grad_clip_max: float = 1.0,
+            grad_clip_max: float = None,
             device="cpu"
     ):
         """
@@ -132,7 +132,11 @@ class DDPGRLAgent(BaseRLAgent):
         actions += training * max(self.eps, 0) * self.random_process.sample()
         actions = np.clip(actions, -1., 1.)
 
-        return actions, np.zeros_like(actions), np.zeros((actions.shape[0]))
+        return {
+            "actions": actions,
+            "action_logits": np.zeros_like(actions),
+            "log_probs": np.zeros((actions.shape[0]))
+        }
 
     def learn(
             self,
@@ -219,7 +223,8 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.qnetwork_optimizer.zero_grad()
         self.critic_loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.qnetwork_local.parameters(), self.grad_clip_max)
+        if self.grad_clip_max is not None:
+            torch.nn.utils.clip_grad_norm_(self.qnetwork_local.parameters(), self.grad_clip_max)
         self.qnetwork_optimizer.step()
 
         actions = self.argmaxpolicy_local(states)
@@ -227,7 +232,8 @@ class DDPGRLAgent(BaseRLAgent):
 
         self.argmaxpolicy_optimizer.zero_grad()
         self.policy_gradients.backward()
-        torch.nn.utils.clip_grad_norm_(self.argmaxpolicy_local.parameters(), self.grad_clip_max)
+        if self.grad_clip_max is not None:
+            torch.nn.utils.clip_grad_norm_(self.argmaxpolicy_local.parameters(), self.grad_clip_max)
         self.argmaxpolicy_optimizer.step()
 
         self.loss = self.critic_loss + self.policy_gradients

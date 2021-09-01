@@ -2,7 +2,7 @@ from typing import Callable
 import torch
 import torch.nn as nn
 
-from lib.models.policy import DeterministicBasePolicy
+from lib.models.policy.DeterministicBasePolicy import DeterministicBasePolicy
 
 
 class DeterministicContinuousGaussianPolicy(DeterministicBasePolicy):
