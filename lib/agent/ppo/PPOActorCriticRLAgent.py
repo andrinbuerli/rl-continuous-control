@@ -139,12 +139,11 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             batch_action_logits = action_logits[minibatch_idx]
             batch_action_log_probs = action_log_probs[minibatch_idx]
             batch_value_target = value_target[minibatch_idx]
-            batch_advantage = advantage[minibatch_idx].view(-1, 1)
+            batch_advantage = advantage[minibatch_idx]
 
             pred = self.model(batch_states, scale=self.std_scale)
-            batch_estimated_state_values = pred["v"].reshape(-1)
             critic_loss = self.critic_loss_coefficient * \
-                          ((batch_value_target - batch_estimated_state_values) ** 2).mean()
+                          ((batch_value_target - pred["v"].reshape(-1)) ** 2).mean()
 
             # multiply the probs of each action dimension (sum the log_probs)
             new_log_probs = pred["dist"].log_prob(batch_action_logits).sum(dim=1)
@@ -153,7 +152,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             clipped_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
             clipped_surrogate = torch.min(ratio * batch_advantage, clipped_ratio * batch_advantage)
 
-            regularization = self.beta * pred["dist"].entropy().mean(dim=1)
+            regularization = self.beta * pred["dist"].entropy()
 
             actor_loss = - (clipped_surrogate.mean() + regularization.mean())
             loss = actor_loss + critic_loss
