@@ -26,13 +26,16 @@ if __name__ == "__main__":
             "beta": 0.01,
             "beta_deay": .995,
             "learning_rate": 0.0001,
-            "batch_size": 128,
-            "SGD_epoch": 32,
+            "batch_size": 1024,
+            "SGD_epoch": 8,
             "n_iterations": int(1e7),
             "max_t": 512,
             "gae_lambda": 0.99,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
+            "grad_clip_max": 1.0,
+            "std_scale": 1.0,
+            "std_scale_decay":  0.999,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0])
         })
@@ -59,7 +62,9 @@ if __name__ == "__main__":
         gae_lambda=args.gae_lambda,
         critic_loss_coefficient=args.critic_loss_coefficient,
         device=device,
-        grad_clip_max=1.0)
+        std_scale=args.std_scale,
+        std_scale_decay=args.std_scale_decay,
+        grad_clip_max=args.grad_clip_max)
 
     if device != "cpu":
         torch.cuda.set_device(0)
