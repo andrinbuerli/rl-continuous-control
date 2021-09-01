@@ -37,7 +37,8 @@ if __name__ == "__main__":
             "std_scale": 1.0,
             "std_scale_decay":  0.999,
             "api_key": "",
-            "seed": int(np.random.randint(0, 1e10, 1)[0])
+            "seed": int(np.random.randint(0, 1e10, 1)[0]),
+            "model_path": "agents/Crawler-PPO_ActorCritic_287-5129283311-202.13"
         })
 
     env = ParallelAgentsUnityEnvironment(
@@ -65,6 +66,9 @@ if __name__ == "__main__":
         std_scale=args.std_scale,
         std_scale_decay=args.std_scale_decay,
         grad_clip_max=args.grad_clip_max)
+
+    if args.model_path is not None and args.model_path != "":
+        agent.load(args.model_path)
 
     if device != "cpu":
         torch.cuda.set_device(0)
