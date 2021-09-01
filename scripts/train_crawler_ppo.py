@@ -91,7 +91,7 @@ if __name__ == "__main__":
     trainer = RLAgentTrainer(agent=agent, env=env, logger=logger, seed=args.seed)
     nr_of_agents = 12
     trainer.train(n_iterations=args.n_iterations, max_t=args.max_t,
-                  t_max_episode=args.SGD_epoch * args.batch_size // nr_of_agents)
+                  t_max_episode=args.SGD_epoch * args.batch_size // nr_of_agents + 1)
 
     env.dispose()
     logger.dispose()
