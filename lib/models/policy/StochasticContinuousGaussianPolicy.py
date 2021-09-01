@@ -11,8 +11,7 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
             state_size: int,
             action_size: int,
             seed: int,
-            output_transform: Callable[[torch.Tensor], torch.Tensor] = None,
-            reduced_capacity: bool = True):
+            output_transform: Callable[[torch.Tensor], torch.Tensor] = None):
         """
         Stochastic policy which learns to sample an action from a continuous multivariate gaussian distribution where
         each action dimension is considered to be independent.
@@ -20,22 +19,14 @@ class StochasticContinuousGaussianPolicy(StochasticBasePolicy):
         super().__init__(state_size=state_size, action_size=action_size, seed=seed, output_transform=output_transform)
         self.output_transform = output_transform
 
-        if reduced_capacity:
-            self.policy_network = nn.Sequential(
-                nn.Linear(state_size, 128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.ReLU()
-            )
-        else:
-            self.policy_network = nn.Sequential(
-                nn.Linear(state_size, 512),
-                nn.ReLU(),
-                nn.Linear(512, 256),
-                nn.ReLU(),
-            )
+        self.policy_network = nn.Sequential(
+            nn.Linear(state_size, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU()
+        )
 
-        self.mu_head = nn.Linear(256, action_size)
+        self.mu_head = nn.Linear(64, action_size)
         self.variance = nn.Parameter(torch.zeros(action_size))
 
     def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
