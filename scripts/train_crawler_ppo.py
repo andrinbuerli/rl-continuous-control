@@ -59,7 +59,7 @@ if __name__ == "__main__":
         gae_lambda=args.gae_lambda,
         critic_loss_coefficient=args.critic_loss_coefficient,
         device=device,
-        grad_clip_max=None)
+        grad_clip_max=1.0)
 
     if device != "cpu":
         torch.cuda.set_device(0)
