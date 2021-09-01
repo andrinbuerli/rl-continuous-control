@@ -7,20 +7,23 @@ from test.ppo.MockPolicy import MockPolicy
 
 def test_estimate_advantages_calculation():
     # arrange
+    dist = torch.distributions.Normal(torch.zeros(3, 1), torch.ones(3, 1))
     policy = MockPolicy(
         state_size=1, action_size=1, seed=42,
-        return_forward_values=(
-            torch.Tensor([[1], [1], [1]]), torch.log(torch.Tensor([0.89, 0.25, 0.3]))
-        ))
+        return_forward_values=
+        {
+            "actions": torch.Tensor([[1], [1], [1]]),
+            "actions_mode": torch.Tensor([[1], [1], [1]]),
+            "dist": dist
+        })
 
     gamma = 0.9
     lambd = 0.9
     testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
-        actor=policy,
-        discount_rate=gamma,
-        critic=StateValueFunction(state_size=1, seed=42)
+        model=policy,
+        discount_rate=gamma
     )
 
     rewards = np.array([[-1, 1, 2]])
@@ -41,8 +44,8 @@ def test_estimate_advantages_calculation():
     gae_estimate = np.array(
         [
             [
-                td_error[0, 0] + (gamma*lambd)*td_error[0, 1] + (gamma*lambd)**2*td_error[0, 2],
-                td_error[0, 1] + (gamma*lambd)*td_error[0, 2],
+                td_error[0, 0] + (gamma * lambd) * td_error[0, 1] + (gamma * lambd) ** 2 * td_error[0, 2],
+                td_error[0, 1] + (gamma * lambd) * td_error[0, 2],
                 td_error[0, 2]
             ]
         ]
@@ -51,29 +54,31 @@ def test_estimate_advantages_calculation():
     # act
     advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
                                                           estimated_next_state_values=torch.tensor(Vt_1),
-                                                          rewards=torch.tensor(rewards)).detach()\
-        .cpu().numpy()
+                                                          rewards=torch.tensor(rewards))
 
     # assert
-    assert np.isclose(gae_estimate, advantages).all()
+    assert np.isclose(gae_estimate, advantages.detach().cpu().numpy()).all()
 
 
 def test_estimate_advantages_calculation_recover_td():
     # arrange
+    dist = torch.distributions.Normal(torch.zeros(3, 1), torch.ones(3, 1))
     policy = MockPolicy(
         state_size=1, action_size=1, seed=42,
-        return_forward_values=(
-            torch.Tensor([[1], [1], [1]]), torch.log(torch.Tensor([0.89, 0.25, 0.3]))
-        ))
+        return_forward_values=
+        {
+            "actions": torch.Tensor([[1], [1], [1]]),
+            "actions_mode": torch.Tensor([[1], [1], [1]]),
+            "dist": dist
+        })
 
     gamma = 0.9
     lambd = 0
     testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
-        actor=policy,
-        discount_rate=gamma,
-        critic=StateValueFunction(state_size=1, seed=42)
+        model=policy,
+        discount_rate=gamma
     )
 
     rewards = np.array([[-1, 1, 2]])
@@ -104,29 +109,31 @@ def test_estimate_advantages_calculation_recover_td():
     # act
     advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
                                                           estimated_next_state_values=torch.tensor(Vt_1),
-                                                          rewards=torch.tensor(rewards)).detach()\
-        .cpu().numpy()
+                                                          rewards=torch.tensor(rewards))
 
     # assert
-    assert np.isclose(gae_estimate, advantages).all()
+    assert np.isclose(gae_estimate, advantages.detach().cpu().numpy()).all()
 
 
 def test_estimate_advantages_calculation_recover_mc():
     # arrange
+    dist = torch.distributions.Normal(torch.zeros(3, 1), torch.ones(3, 1))
     policy = MockPolicy(
         state_size=1, action_size=1, seed=42,
-        return_forward_values=(
-            torch.Tensor([[1], [1], [1]]), torch.log(torch.Tensor([0.89, 0.25, 0.3]))
-        ))
+        return_forward_values=
+        {
+            "actions": torch.Tensor([[1], [1], [1]]),
+            "actions_mode": torch.Tensor([[1], [1], [1]]),
+            "dist": dist
+        })
 
     gamma = 1
     lambd = 1
     testee = PPOActorCriticRLAgent(
         beta=0,
         gae_lambda=lambd,
-        actor=policy,
-        discount_rate=gamma,
-        critic=StateValueFunction(state_size=1, seed=42)
+        model=policy,
+        discount_rate=gamma
     )
 
     rewards = np.array([[-1, 1, 2]])
@@ -149,8 +156,7 @@ def test_estimate_advantages_calculation_recover_mc():
     # act
     advantages = testee.generalized_advantages_estimation(estimated_state_values=torch.tensor(Vt_0),
                                                           estimated_next_state_values=torch.tensor(Vt_1),
-                                                          rewards=torch.tensor(rewards)).detach()\
-        .cpu().numpy()
+                                                          rewards=torch.tensor(rewards))
 
     # assert
-    assert np.isclose(gae_estimate, advantages).all()
+    assert np.isclose(gae_estimate, advantages.detach().cpu().numpy()).all()

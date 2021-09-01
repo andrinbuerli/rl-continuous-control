@@ -103,13 +103,14 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         action_log_probs = torch.tensor(action_log_probs, dtype=torch.float32).to(self.device)
 
         shape = states.shape
-        estimated_state_values = self.model(states.reshape(-1, shape[-1]), scale=self.std_scale)["v"]\
+        estimated_state_values = self.model(states.reshape(-1, shape[-1]), scale=self.std_scale)["v"] \
             .view(shape[0], shape[1]).detach()
-        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]), scale=self.std_scale)["v"]\
+        estimated_next_state_values = self.model(next_states.reshape(-1, shape[-1]), scale=self.std_scale)["v"] \
             .view(shape[0], shape[1]).detach()
-        advantage, value_target = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
-                                                                         estimated_next_state_values=estimated_next_state_values,
-                                                                         rewards=rewards)
+        advantage = self.generalized_advantages_estimation(estimated_state_values=estimated_state_values,
+                                                           estimated_next_state_values=estimated_next_state_values,
+                                                           rewards=rewards)
+        value_target = advantage + estimated_state_values
 
         new_samples = [states.reshape(-1, states.shape[-1]), action_logits.reshape(-1, action_logits.shape[-1]),
                        action_log_probs.reshape(-1), value_target.reshape(-1),
@@ -201,9 +202,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
             coefficients = ((self.gae_lambda * self.discount_rate) ** torch.arange(0, T - t, 1)).to(self.device)
             advantage_estimation[:, t] = (temporal_differences[:, t:] * coefficients).sum(dim=1)
 
-        value_target = advantage_estimation + estimated_state_values
-
-        return advantage_estimation, value_target
+        return advantage_estimation
 
     def get_discounted_future_rewards(self, rewards):
         """

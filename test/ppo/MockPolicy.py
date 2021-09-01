@@ -1,10 +1,10 @@
 import torch
 from torch import nn as nn
 
-from lib.models.policy.StochasticBasePolicy import StochasticBasePolicy
+from lib.models.PPOActorCriticJointModel import PPOActorCriticJointModel
 
 
-class MockPolicy(StochasticBasePolicy):
+class MockPolicy(PPOActorCriticJointModel):
 
     def __init__(
             self,
@@ -17,9 +17,6 @@ class MockPolicy(StochasticBasePolicy):
         self.return_forward_values = return_forward_values
         self.mock_layer = nn.Linear(64, action_size)
 
-    def forward(self, states: torch.Tensor) -> (torch.Tensor, torch.Tensor, torch.distributions.Distribution):
+    def forward(self, states: torch.Tensor, scale) -> (torch.Tensor, torch.Tensor, torch.distributions.Distribution):
         return self.return_forward_values
-
-    def get_action_distribution(self, states: torch.Tensor) -> torch.distributions.Distribution:
-        return self.return_forward_values[-1]
 
