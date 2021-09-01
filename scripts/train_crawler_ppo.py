@@ -26,7 +26,7 @@ if __name__ == "__main__":
             "beta": 0.01,
             "beta_deay": .995,
             "learning_rate": 0.0001,
-            "batch_size": 1024,
+            "batch_size": 128,
             "SGD_epoch": 32,
             "n_iterations": int(1e7),
             "max_t": 512,
