@@ -77,7 +77,12 @@ class PPOActorCriticRLAgent(BaseRLAgent):
 
     def act(self, states: np.ndarray) -> (np.ndarray, np.ndarray):
         states = torch.tensor(states, dtype=torch.float32).to(self.device)
-        pred = self.model(states, scale=self.std_scale)
+
+        self.model.eval()
+        with torch.no_grad():
+            pred = self.model(states, scale=self.std_scale)
+        self.model.train()
+
         log_probs = pred["dist"].log_prob(pred["actions"]) \
             .sum(dim=1) \
             .detach().cpu().numpy()
@@ -129,7 +134,7 @@ class PPOActorCriticRLAgent(BaseRLAgent):
         advantage = (advantage - advantage.mean()) / advantage.std()
 
         indices = torch.randperm(buffer_length)
-        batches = [indices[i * self.batch_size:(i + 1) * self.batch_size] for i, x in enumerate(range(self.SGD_epoch))]
+        batches = [indices[i * self.batch_size:(i + 1) * self.batch_size] for i, x in enumerate(range(buffer_length // self.batch_size))]
 
         actor_losses = []
         critic_losses = []
