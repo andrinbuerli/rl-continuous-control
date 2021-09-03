@@ -38,7 +38,7 @@ if __name__ == "__main__":
             "std_scale_decay":  0.999,
             "api_key": "",
             "seed": int(np.random.randint(0, 1e10, 1)[0]),
-            "model_path": "agents/Crawler-PPO_ActorCritic_1-3015922272-2125.88"
+            "model_path": "agents/Crawler-PPO_ActorCritic_6695-3447921720-2389.5"
         })
 
     env = ParallelAgentsUnityEnvironment(
