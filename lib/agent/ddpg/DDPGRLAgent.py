@@ -160,7 +160,6 @@ class DDPGRLAgent(BaseRLAgent):
                                                      dones.reshape(states.shape[0] * states.shape[1], -1)):
             self.memory.add(state, action, reward, next_state, done)
 
-        print(len(self.memory))
         if len(self.memory) > self.replay_min_size:
             for _ in range(self.update_for):
                 # If enough samples are available in memory, get random subset and learn
@@ -183,6 +182,7 @@ class DDPGRLAgent(BaseRLAgent):
     def get_log_dict(self) -> dict:
         return {
             "epsilon": self.eps,
+            "replay_buffer_size": len(self.memory),
             "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
             "actor_loss": self.policy_gradients.detach().cpu().numpy() if self.policy_gradients is not None else None,
             "loss": self.loss.detach().cpu().numpy() if self.loss is not None else None,
