@@ -193,10 +193,10 @@ class DDPGRLAgent(BaseRLAgent):
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
                 if self.critic_loss is not None else None,
             "actor_mean_weights_norm":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
+                np.array([x.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
                 if self.policy_gradients is not None else None,
             "critic_mean_weights_norm":
-                np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
+                np.array([x.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
                 if self.critic_loss is not None else None
         }
 
