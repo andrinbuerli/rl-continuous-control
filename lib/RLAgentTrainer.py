@@ -136,7 +136,6 @@ class RLAgentTrainer:
 
             self.states = next_states
             self.trajectory_scores += rewards
-
             t += 1
             if t >= max_t:
                 if np.all(dones) or t >= t_max_episode\

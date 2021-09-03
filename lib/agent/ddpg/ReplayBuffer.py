@@ -58,7 +58,13 @@ class ReplayBuffer:
         dones = torch.from_numpy(np.vstack([e.done for e in experiences if e is not None])).float().to(
             self.device)
 
-        return states, actions, rewards, next_states, dones
+        return {
+            "states": states,
+            "actions": actions,
+            "rewards": rewards,
+            "next_states": next_states,
+            "dones": dones
+        }
 
     def __len__(self):
         """Return the current size of internal memory."""

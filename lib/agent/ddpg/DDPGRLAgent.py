@@ -19,6 +19,7 @@ class DDPGRLAgent(BaseRLAgent):
             action_size: int,
             seed: int = 0,
             buffer_size: int = int(1e5),
+            replay_min_size: int = int(1e4),
             batch_size: int = 64,
             gamma: float = 0.99,
             tau: float = 1e-3,
@@ -60,6 +61,7 @@ class DDPGRLAgent(BaseRLAgent):
         @param epsilon_min:
         @param device: the device on which the calculations are to be executed
         """
+        self.replay_min_size = replay_min_size
         self.grad_clip_max = grad_clip_max
         self.epsilon_min = epsilon_min
         self.update_for = update_for
@@ -158,15 +160,17 @@ class DDPGRLAgent(BaseRLAgent):
                                                      dones.reshape(states.shape[0] * states.shape[1], -1)):
             self.memory.add(state, action, reward, next_state, done)
 
-        if len(self.memory) > self.batch_size * self.update_for and (self.t_step + 1) % self.update_every == 0:
+        print(len(self.memory))
+        if len(self.memory) > self.replay_min_size:
             for _ in range(self.update_for):
                 # If enough samples are available in memory, get random subset and learn
                 experiences = self.memory.sample()
 
                 self.__learn(experiences)
 
-            self.__soft_update(self.qnetwork_local, self.qnetwork_target)
-            self.__soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
+            if (self.t_step + 1) % self.update_every == 0:
+                self.__soft_update(self.qnetwork_local, self.qnetwork_target)
+                self.__soft_update(self.argmaxpolicy_local, self.argmaxpolicy_target)
 
             self.eps = max(self.eps * self.eps_decay, self.epsilon_min)
 
@@ -197,9 +201,18 @@ class DDPGRLAgent(BaseRLAgent):
         }
 
     def __learn(self, experiences):
-        states, actions, rewards, next_states, dones = experiences
+        states = experiences["states"]
+        actions = experiences["actions"]
+        rewards = experiences["rewards"]
+        next_states = experiences["next_states"]
+        dones = experiences["dones"]
 
-        td_error = self.__calculate_td_error(states, actions, rewards, next_states, dones)
+        next_best_actions = self.argmaxpolicy_target.forward(next_states)
+        q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
+
+        q_targets = rewards + (1 - dones) * self.gamma * q_values_next_state
+        q_values = self.qnetwork_local.forward(states, actions)
+        td_error = q_values - q_targets
 
         self.critic_loss = (td_error ** 2).mean()
 
@@ -210,7 +223,7 @@ class DDPGRLAgent(BaseRLAgent):
         self.qnetwork_optimizer.step()
 
         actions = self.argmaxpolicy_local(states)
-        self.policy_gradients = -(self.qnetwork_local(states, actions)).mean()
+        self.policy_gradients = -self.qnetwork_local(states, actions).mean()
 
         self.argmaxpolicy_optimizer.zero_grad()
         self.policy_gradients.backward()
@@ -219,16 +232,6 @@ class DDPGRLAgent(BaseRLAgent):
         self.argmaxpolicy_optimizer.step()
 
         self.loss = self.critic_loss + self.policy_gradients
-
-    def __calculate_td_error(self, states, actions, rewards, next_states, dones):
-        next_best_actions = self.argmaxpolicy_target.forward(next_states)
-        q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
-
-        q_targets = rewards + (1 - dones) * self.gamma * q_values_next_state
-        q_values = self.qnetwork_local.forward(states, actions)
-        td_error = q_values - q_targets
-
-        return td_error
 
     def __soft_update(self, local_model, target_model):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
