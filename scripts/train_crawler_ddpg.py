@@ -35,7 +35,7 @@ if __name__ == "__main__":
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
-            "grad_clip_max": "1",
+            "grad_clip_max": 1.0,
             "seed": int(np.random.randint(0, 1e10, 1)[0]),
             "agent_weights": "agents/Crawler-DDPG_5454-4358549101-313.19"
         })
