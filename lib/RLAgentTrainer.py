@@ -75,6 +75,9 @@ class RLAgentTrainer:
 
             score_window_mean = np.mean(self.scores_window)
 
+            dir_name = f'{self.env.name}-{self.agent.get_name()}-{self.seed}-latest'
+            self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
+
             if max_mean_score is None or max_mean_score < score_window_mean:
                 max_mean_score = score_window_mean if not np.isnan(score_window_mean) else max_mean_score
                 directories = list(glob(f"{self.agent_save_dir}/*{self.seed}*"))

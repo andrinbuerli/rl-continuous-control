@@ -183,21 +183,21 @@ class DDPGRLAgent(BaseRLAgent):
         return {
             "epsilon": self.eps,
             "replay_buffer_size": len(self.memory),
-            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else None,
-            "actor_loss": self.policy_gradients.detach().cpu().numpy() if self.policy_gradients is not None else None,
-            "loss": self.loss.detach().cpu().numpy() if self.loss is not None else None,
+            "critic_loss": self.critic_loss.detach().cpu().numpy() if self.critic_loss is not None else 0.0,
+            "actor_loss": self.policy_gradients.detach().cpu().numpy() if self.policy_gradients is not None else 0.0,
+            "loss": self.loss.detach().cpu().numpy() if self.loss is not None else 0.0,
             "grad_actor":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
-                if self.policy_gradients is not None else None,
+                if self.policy_gradients is not None else 0.0,
             "grad_critic":
                 np.array([x.grad.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
-                if self.critic_loss is not None else None,
+                if self.critic_loss is not None else 0.0,
             "actor_mean_weights_norm":
                 np.array([x.norm(dim=0).mean().detach().cpu().numpy() for x in self.argmaxpolicy_local.parameters()]).mean()
-                if self.policy_gradients is not None else None,
+                if self.policy_gradients is not None else 0.0,
             "critic_mean_weights_norm":
                 np.array([x.norm(dim=0).mean().detach().cpu().numpy() for x in self.qnetwork_local.parameters()]).mean()
-                if self.critic_loss is not None else None
+                if self.critic_loss is not None else 0.0
         }
 
     def __learn(self, experiences):
