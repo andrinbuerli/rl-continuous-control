@@ -132,7 +132,7 @@ class RLAgentTrainer:
 
             if np.isnan(rewards).any():
                 print("!!!!! WARNING NAN rewards detected, penalizing agent !!!!!")
-                rewards = np.nan_to_num(rewards, nan=min(rewards))  # NAN penalty
+                rewards = np.nan_to_num(rewards, nan=0)  # NAN penalty
 
             s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
             pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states), d.append(dones)
