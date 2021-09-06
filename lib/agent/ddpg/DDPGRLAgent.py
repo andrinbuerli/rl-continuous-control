@@ -207,7 +207,7 @@ class DDPGRLAgent(BaseRLAgent):
         next_states = experiences["next_states"]
         dones = experiences["dones"]
 
-        if np.isnan(rewards).any():
+        if np.isnan(rewards.detach().cpu()).any():
             import pdb; pdb.set_trace()
 
         next_best_actions = self.argmaxpolicy_target.forward(next_states)
