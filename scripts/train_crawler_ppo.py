@@ -33,7 +33,7 @@ if __name__ == "__main__":
             "gae_lambda": 0.99,
             "enable_log": 1,
             "critic_loss_coefficient": .5,
-            "grad_clip_max": 1.0,
+            "grad_clip_max": None,
             "std_scale": 1.0,
             "std_scale_decay":  0.999,
             "api_key": "",
