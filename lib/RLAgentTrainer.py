@@ -80,7 +80,7 @@ class RLAgentTrainer:
 
             if max_mean_score is None or max_mean_score < score_window_mean:
                 max_mean_score = score_window_mean if not np.isnan(score_window_mean) else max_mean_score
-                directories = list(glob(f"{self.agent_save_dir}/*{self.seed}*"))
+                directories = list(glob(f"{self.agent_save_dir}/*_*{self.seed}*"))
                 if len(directories) > 0:
                     shutil.rmtree(directories[0])
 
@@ -130,15 +130,17 @@ class RLAgentTrainer:
             pred = self.agent.act(self.states)
             next_states, rewards, dones = self.env.act(pred["actions"])
 
-            if np.isnan(rewards).any():
-                import pdb
-                pdb.set_trace()
-                print("test")
+            any_nan_rewards = np.isnan(rewards).any()
+
+            if any_nan_rewards:
                 print("!!!!! WARNING NAN rewards detected, penalizing agent !!!!!")
-                rewards = np.nan_to_num(rewards, nan=0)  # NAN penalty
+                rewards = np.nan_to_num(rewards, nan=-5.0)  # NAN penalty
 
             s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
             pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states), d.append(dones)
+
+            if any_nan_rewards:
+                break
 
             self.states = next_states
             self.trajectory_scores += rewards
