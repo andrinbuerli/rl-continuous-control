@@ -208,7 +208,9 @@ class DDPGRLAgent(BaseRLAgent):
         dones = experiences["dones"]
 
         if np.isnan(rewards.detach().cpu()).any():
-            import pdb; pdb.set_trace()
+            import pdb
+            pdb.set_trace()
+            print("test")
 
         next_best_actions = self.argmaxpolicy_target.forward(next_states)
         q_values_next_state = self.qnetwork_target.forward(next_states, next_best_actions)
@@ -225,7 +227,9 @@ class DDPGRLAgent(BaseRLAgent):
             torch.nn.utils.clip_grad_norm_(self.qnetwork_local.parameters(), self.grad_clip_max)
 
         if any([np.isnan(x.grad.detach().cpu().numpy()).any() for x in self.qnetwork_local.parameters()]):
-            import pdb; pdb.set_trace()
+            import pdb
+            pdb.set_trace()
+            print("test")
 
         self.qnetwork_optimizer.step()
 
@@ -238,7 +242,9 @@ class DDPGRLAgent(BaseRLAgent):
             torch.nn.utils.clip_grad_norm_(self.argmaxpolicy_local.parameters(), self.grad_clip_max)
 
         if any([np.isnan(x.grad.detach().cpu().numpy()).any() for x in self.argmaxpolicy_local.parameters()]):
-            import pdb; pdb.set_trace()
+            import pdb
+            pdb.set_trace()
+            print("test")
 
         self.argmaxpolicy_optimizer.step()
 
