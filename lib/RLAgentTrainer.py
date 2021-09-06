@@ -131,6 +131,7 @@ class RLAgentTrainer:
             next_states, rewards, dones = self.env.act(pred["actions"])
 
             if np.isnan(rewards).any():
+                import pdb; pdb.set_trace()
                 print("!!!!! WARNING NAN rewards detected, penalizing agent !!!!!")
                 rewards = np.nan_to_num(rewards, nan=0)  # NAN penalty
 
