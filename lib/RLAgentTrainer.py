@@ -80,7 +80,7 @@ class RLAgentTrainer:
 
             if max_mean_score is None or max_mean_score < score_window_mean:
                 max_mean_score = score_window_mean if not np.isnan(score_window_mean) else max_mean_score
-                directories = list(glob(f"{self.agent_save_dir}/*_*{self.seed}*"))
+                directories = list(glob(f"{self.agent_save_dir}/*{self.seed}*-best-*"))
                 if len(directories) > 0:
                     shutil.rmtree(directories[0])
 
@@ -102,7 +102,7 @@ class RLAgentTrainer:
             self.__save_agent(i_iter, score_window_mean)
 
     def __save_agent(self, i_iter, score_window_mean):
-        dir_name = f'{self.env.name}-{self.agent.get_name()}_{i_iter}-{self.seed}-{round(score_window_mean, 2)}'
+        dir_name = f'{self.env.name}-{self.agent.get_name()}-{self.seed}-best-{round(score_window_mean, 2)}'
         self.agent.save(directory_name=os.path.join(self.agent_save_dir, dir_name))
 
     def __collect_trajectories(self, max_t: int, intercept: bool = False, t_max_episode: int = 1e3):
@@ -133,8 +133,14 @@ class RLAgentTrainer:
             any_nan_rewards = np.isnan(rewards).any()
 
             if any_nan_rewards:
-                print("!!!!! WARNING NAN rewards detected, penalizing agent !!!!!")
-                rewards = np.nan_to_num(rewards, nan=-5.0)  # NAN penalty
+                print("!!!!! WARNING NAN rewards detected, reset environment !!!!!")
+                self.agent.reset()
+                self.states = self.env.reset()
+                self.trajectory_scores = np.zeros(self.env.num_agents)
+                self.t_sampled = 0
+                if len(s_t0) > 0:
+                    break
+
 
             s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
             pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states), d.append(dones)
@@ -149,7 +155,7 @@ class RLAgentTrainer:
                 if np.all(dones) or t >= t_max_episode\
                         or (intercept and self.t_sampled + t >=t_max_episode):
                     if intercept:
-                        self.__log_and_metrics(self.t_sampled)
+                        self.__log_and_metrics(self.t_sampled + t)
 
                         self.agent.reset()
                         self.states = self.env.reset()
