@@ -46,7 +46,7 @@ class RLAgentTrainer:
             self,
             n_iterations: int,
             max_t: Union[List[int], int],
-            max_t_iteration:  Union[List[int], int] = None,
+            max_t_iteration: Union[List[int], int] = None,
             intercept: bool = False,
             t_max_episode: int = 1e3):
         """
@@ -62,7 +62,8 @@ class RLAgentTrainer:
         max_mean_score = None
         for i_iter in range(1, n_iterations + 1):
             if type(max_t_original) is list:
-                max_t_index = min([i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
+                max_t_index = min(
+                    [i for i, tresh in enumerate(max_t_iteration) if tresh >= i_iter] + [len(max_t_original) - 1])
                 max_t = max_t_original[max_t_index]
 
             trajectory = self.__collect_trajectories(max_t=max_t, intercept=intercept, t_max_episode=t_max_episode)
@@ -130,10 +131,11 @@ class RLAgentTrainer:
             pred = self.agent.act(self.states)
             next_states, rewards, dones = self.env.act(pred["actions"])
 
-            any_nan_rewards = np.isnan(rewards).any()
+            any_nan = np.isnan(rewards).any() or np.isnan(next_states).any() or np.isnan(dones).any() \
+                              or np.isnan(pred["actions"]).any() or np.isnan(self.states).any()
 
-            if any_nan_rewards:
-                print("!!!!! WARNING NAN rewards detected, reset environment !!!!!")
+            if any_nan:
+                print("!!!!! WARNING NAN detected, reset environment !!!!!")
                 self.agent.reset()
                 self.states = self.env.reset()
                 self.trajectory_scores = np.zeros(self.env.num_agents)
@@ -141,19 +143,18 @@ class RLAgentTrainer:
                 if len(s_t0) > 0:
                     break
 
-
-            s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]),\
+            s_t0.append(self.states), a_t0.append(pred["actions"]), al_t0.append(pred["action_logits"]), \
             pa_t0.append(pred["log_probs"]), r_t1.append(rewards), s_t1.append(next_states), d.append(dones)
 
-            if any_nan_rewards:
+            if any_nan:
                 break
 
             self.states = next_states
             self.trajectory_scores += rewards
             t += 1
             if t >= max_t:
-                if np.all(dones) or t >= t_max_episode\
-                        or (intercept and self.t_sampled + t >=t_max_episode):
+                if np.all(dones) or t >= t_max_episode \
+                        or (intercept and self.t_sampled + t >= t_max_episode):
                     if intercept:
                         self.__log_and_metrics(self.t_sampled + t)
 
