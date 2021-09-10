@@ -152,7 +152,7 @@ class RLAgentTrainer:
             self.states = next_states
             self.trajectory_scores += rewards
             t += 1
-            if t >= max_t:
+            if t >= max_t or np.all(dones):
                 if np.all(dones) or t >= t_max_episode \
                         or (intercept and self.t_sampled + t >= t_max_episode):
                     if intercept:
