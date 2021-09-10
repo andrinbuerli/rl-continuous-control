@@ -21,23 +21,23 @@ if __name__ == "__main__":
         config_objects={
             "gamma": 0.99,
             "epsilon": 1.0,
-            "epsilon_decay": .999995,
+            "epsilon_decay": .99995,
             "epsilon_min": 0.05,
             "buffer_size": int(1e6),
-            "min_buffer_size": int(1e5),
-            "batch_size": 128,
+            "min_buffer_size": int(1e4),
+            "batch_size": 64,
             "tau": 1e-3,
             "update_every": 1,
-            "learning_rate": 0.0001,
-            "update_for": 12,
+            "learning_rate": 0.0005,
+            "update_for": 16,
             "n_iterations": int(1e7),
-            "max_t": 128,
+            "max_t": 32,
             "max_t_iteration": [2000, 4000, 6000, 8000],
             "enable_log": 1,
             "api_key": "",
             "grad_clip_max": 10.0,
             "seed": int(np.random.randint(0, 1e10, 1)[0]),
-            "agent_weights": None
+            "agent_weights": "agents/Crawler-DDPG-1731956414-best-464.18"
         })
 
     env = ParallelAgentsUnityEnvironment(
