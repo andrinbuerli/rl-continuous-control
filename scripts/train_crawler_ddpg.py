@@ -40,6 +40,8 @@ if __name__ == "__main__":
             "agent_weights": "agents/Crawler-DDPG-1731956414-best-464.18"
         })
 
+    torch.autograd.set_detect_anomaly(True)
+
     env = ParallelAgentsUnityEnvironment(
         name="Crawler",
         target_reward=3000,
