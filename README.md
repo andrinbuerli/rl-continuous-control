@@ -26,7 +26,7 @@ It is a product of all the rewards, this helps the agent try to maximize all rew
 
 |        Initial (random) policy:         |               Learned policy:               |
 | :-------------------------------------: | :-----------------------------------------: |
-| <img src="imgs\initial_crawler.gif"  /> | <img src="imgs\initial_crawler.gif"  />TBD! |
+| <img src="imgs\initial_crawler.gif"  /> | <img src="imgs\trained_crawler.gif"  /> |
 
 The observation space consists of 172 variables corresponding to position, rotation, velocity, and angular velocities of each limb plus the acceleration and angular acceleration of the body. Each action is a vector with 20 numbers, corresponding to target rotations for joints. The environment is considered solved if a mean reward of 3000 is reached over 100 consecutive episodes.
 
