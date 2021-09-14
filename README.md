@@ -3,7 +3,7 @@
 
 ### Introduction
 
-In this project, an agent is trained to interact in two different environments whereas the action space continuous is both of them. 
+In this project, an agent is trained to interact in two different environments whereas the action space is continuous in both of them. 
 
 #### Reacher
 
